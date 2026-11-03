@@ -177,29 +177,40 @@ export default function ShareStoryModal({
       ctx.fillStyle = radial;
       ctx.fillRect(0, 0, W, H);
 
-      // 3. Story Card Frame (matching preview container proportions)
-      const pad = 36;
-      const cardW = W - pad * 2;
-      const cardH = H - pad * 2;
+      // 3. Story Card Frame (Compensated for Telegram Story safe zones: top 240px, bottom 320px)
+      const cardX1 = 64;
+      const cardY1 = 250;
+      const cardX2 = W - 64;
+      const cardY2 = 1570;
+      const cardW = cardX2 - cardX1;
+      const cardH = cardY2 - cardY1;
+
       ctx.save();
       ctx.beginPath();
-      ctx.roundRect(pad, pad, cardW, cardH, 44);
+      ctx.roundRect(cardX1, cardY1, cardW, cardH, 48);
       ctx.fillStyle = activeStoryTheme.bg;
       ctx.fill();
-      ctx.lineWidth = 4;
+      ctx.lineWidth = 3;
       ctx.strokeStyle = activeStoryTheme.cardBorder;
       ctx.stroke();
+
+      // Top edge ambient accent line
+      ctx.beginPath();
+      ctx.roundRect(cardX1 + 4, cardY1 + 4, cardW - 8, 6, 3);
+      ctx.fillStyle = activeStoryTheme.accent;
+      ctx.globalAlpha = 0.4;
+      ctx.fill();
       ctx.restore();
 
       // 4. Top Bar Branding (Left: Logo + Tagline, Right: @Handle)
-      const contentX = pad + 48;
-      const rightX = W - pad - 48;
-      const topY = pad + 70;
+      const contentX = cardX1 + 48;
+      const rightX = cardX2 - 48;
+      const topY = cardY1 + 52;
 
       ctx.save();
       ctx.textBaseline = 'top';
       ctx.textAlign = 'left';
-      ctx.font = '900 58px "Plus Jakarta Sans", system-ui, sans-serif';
+      ctx.font = '900 46px "Plus Jakarta Sans", system-ui, sans-serif';
 
       const remText = t('app_name_rem') || 'Rem';
       const notenText = t('app_name_noten') || 'noten';
@@ -214,21 +225,29 @@ export default function ShareStoryModal({
       ctx.fillText(notenText, contentX + remW, topY);
 
       // Tagline under logo
-      ctx.font = '500 24px "Plus Jakarta Sans", system-ui, sans-serif';
+      ctx.font = '600 20px "Plus Jakarta Sans", system-ui, sans-serif';
       ctx.fillStyle = '#8E8E93';
-      ctx.fillText(t('slogan'), contentX, topY + 70);
+      ctx.fillText('HABIT TRACKER & STREAKS', contentX, topY + 54);
 
       // Right-aligned User Handle
       ctx.textAlign = 'right';
-      ctx.font = '700 28px "Plus Jakarta Sans", system-ui, sans-serif';
-      ctx.fillStyle = '#8E8E93';
-      ctx.fillText(displayHandle, rightX, topY + 14);
+      ctx.font = '700 24px "Plus Jakarta Sans", system-ui, sans-serif';
+      ctx.fillStyle = '#D4D4D8';
+      ctx.fillText(displayHandle, rightX, topY + 12);
+
+      // Header Divider
+      ctx.beginPath();
+      ctx.moveTo(contentX, topY + 95);
+      ctx.lineTo(rightX, topY + 95);
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
       ctx.restore();
 
       // 5. Center Hero Flame Circle
       ctx.save();
-      const heroCenterY = 700;
-      const circleR = 120;
+      const heroCenterY = cardY1 + 410;
+      const circleR = 110;
 
       // Outer radial glow halo around circle
       const haloGrad = ctx.createRadialGradient(W / 2, heroCenterY, circleR * 0.6, W / 2, heroCenterY, circleR * 1.8);
@@ -242,15 +261,15 @@ export default function ShareStoryModal({
       // Inner Circle Container
       ctx.beginPath();
       ctx.arc(W / 2, heroCenterY, circleR, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(24, 24, 30, 0.85)';
+      ctx.fillStyle = 'rgba(24, 24, 34, 0.95)';
       ctx.fill();
-      ctx.lineWidth = 5;
+      ctx.lineWidth = 4;
       ctx.strokeStyle = activeStoryTheme.accent;
       ctx.stroke();
 
-      // Draw Vector Lucide Flame Icon inside circle (exact vector math, matching app preview)
+      // Draw Vector Lucide Flame Icon inside circle
       if (habit) {
-        ctx.font = '96px "Apple Color Emoji", "Segoe UI Emoji", sans-serif';
+        ctx.font = '84px "Apple Color Emoji", "Segoe UI Emoji", sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText('🎯', W / 2, heroCenterY);
@@ -259,8 +278,8 @@ export default function ShareStoryModal({
           'M12 3q1 4 4 6.5t3 5.5a1 1 0 0 1-14 0 5 5 0 0 1 1-3 1 1 0 0 0 5 0c0-2-1.5-3-1.5-5q0-2 2.5-4'
         );
         ctx.save();
-        ctx.translate(W / 2, heroCenterY);
-        const flameScale = 5.6;
+        ctx.translate(W / 2, heroCenterY - 4);
+        const flameScale = 5.2;
         ctx.scale(flameScale, flameScale);
         ctx.translate(-12, -12); // Center 24x24 Lucide viewBox
         ctx.fillStyle = activeStoryTheme.accent;
@@ -275,45 +294,45 @@ export default function ShareStoryModal({
       ctx.textBaseline = 'middle';
 
       if (habit) {
-        ctx.font = '900 68px "Plus Jakarta Sans", system-ui, sans-serif';
+        ctx.font = '900 64px "Plus Jakarta Sans", system-ui, sans-serif';
         ctx.fillStyle = '#FFFFFF';
-        ctx.fillText(habit.name, W / 2, 930);
+        ctx.fillText(habit.name, W / 2, heroCenterY + 180);
 
-        ctx.font = '700 32px "Plus Jakarta Sans", system-ui, sans-serif';
+        ctx.font = '700 28px "Plus Jakarta Sans", system-ui, sans-serif';
         ctx.fillStyle = activeStoryTheme.accent;
         ctx.fillText(
           `${habit.frequency || t('freq_daily')} • ${habit.target || 1} ${habit.unit || ''}`.trim(),
           W / 2,
-          1000
+          heroCenterY + 240
         );
       } else {
-        ctx.font = '900 160px "Plus Jakarta Sans", system-ui, sans-serif';
+        ctx.font = '900 130px "Plus Jakarta Sans", system-ui, sans-serif';
         ctx.fillStyle = activeStoryTheme.accent;
-        ctx.fillText(String(streak), W / 2, 920);
+        ctx.fillText(String(streak), W / 2, heroCenterY + 180);
 
-        ctx.font = '900 38px "Plus Jakarta Sans", system-ui, sans-serif';
+        ctx.font = '900 32px "Plus Jakarta Sans", system-ui, sans-serif';
         ctx.fillStyle = '#FFFFFF';
-        ctx.fillText(t('streak_days').toUpperCase(), W / 2, 1020);
+        ctx.fillText(t('streak_days').toUpperCase(), W / 2, heroCenterY + 260);
       }
 
       // Badge Pill ("ON FIRE" / "UNSTOPPABLE")
       const pillW = 320;
-      const pillH = 58;
+      const pillH = 52;
       const pillX = W / 2 - pillW / 2;
-      const pillY = 1080;
+      const pillY = heroCenterY + 300;
       ctx.beginPath();
-      ctx.roundRect(pillX, pillY, pillW, pillH, 29);
+      ctx.roundRect(pillX, pillY, pillW, pillH, 26);
       ctx.fillStyle = activeStoryTheme.accent;
       ctx.fill();
 
-      ctx.font = '900 24px "Plus Jakarta Sans", system-ui, sans-serif';
+      ctx.font = '900 22px "Plus Jakarta Sans", system-ui, sans-serif';
       ctx.fillStyle = '#000000';
       ctx.fillText(badgeText, W / 2, pillY + pillH / 2 + 1);
       ctx.restore();
 
       // 7. 7-Day Consistency Dots Row
       ctx.save();
-      const dotY = 1250;
+      const dotY = heroCenterY + 440;
       const dotSpacing = 110;
       const dotStartX = W / 2 - 3 * dotSpacing;
 
@@ -325,9 +344,9 @@ export default function ShareStoryModal({
         const isDone = day.completed;
 
         // Day label initial (M, T, W, T, F, S, S)
-        ctx.font = '700 22px "Plus Jakarta Sans", system-ui, sans-serif';
+        ctx.font = '700 20px "Plus Jakarta Sans", system-ui, sans-serif';
         ctx.fillStyle = '#8E8E93';
-        ctx.fillText(day.label.slice(0, 1).toUpperCase(), x, dotY - 32);
+        ctx.fillText(day.label.slice(0, 1).toUpperCase(), x, dotY - 30);
 
         // Dot circle
         ctx.beginPath();
@@ -336,35 +355,41 @@ export default function ShareStoryModal({
           ctx.fillStyle = activeStoryTheme.accent;
           ctx.fill();
         } else {
-          ctx.fillStyle = '#282830';
+          ctx.fillStyle = '#262634';
           ctx.fill();
+          ctx.lineWidth = 2;
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+          ctx.stroke();
         }
       });
       ctx.restore();
 
-      // 8. Footer (Matching App Preview)
+      // 8. Call to Action & Slogan
       ctx.save();
-      const footerY = H - pad - 120;
+      const ctaY = cardY2 - 170;
 
-      // Divider line
+      // CTA Box
+      const btnW = cardW - 96;
+      const btnH = 80;
+      const btnX = W / 2 - btnW / 2;
       ctx.beginPath();
-      ctx.moveTo(contentX, footerY - 40);
-      ctx.lineTo(rightX, footerY - 40);
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
-      ctx.lineWidth = 1.5;
+      ctx.roundRect(btnX, ctaY, btnW, btnH, 24);
+      ctx.fillStyle = 'rgba(26, 26, 38, 0.9)';
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = activeStoryTheme.accent;
       ctx.stroke();
 
-      // Tagline
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.font = '500 26px "Plus Jakarta Sans", system-ui, sans-serif';
-      ctx.fillStyle = '#A1A1AA';
-      ctx.fillText(t('slogan'), W / 2, footerY + 10);
+      ctx.font = '800 26px "Plus Jakarta Sans", system-ui, sans-serif';
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillText('🚀 Track your streak on Telegram • @remnotenbot', W / 2, ctaY + btnH / 2);
 
-      // Subtitle
-      ctx.font = '600 22px "Plus Jakarta Sans", system-ui, sans-serif';
+      // Slogan Footer
+      ctx.font = '500 22px "Plus Jakarta Sans", system-ui, sans-serif';
       ctx.fillStyle = '#71717A';
-      ctx.fillText(t('share_track_on_remnoten'), W / 2, footerY + 50);
+      ctx.fillText(t('slogan') || 'Better habits. A sharper you.', W / 2, cardY2 - 40);
       ctx.restore();
 
       // Convert to Blob
@@ -409,7 +434,15 @@ export default function ShareStoryModal({
 
       // Second check: Telegram WebApp Bot API 7.8+ shareToStory
       if (tg?.isVersionAtLeast?.('7.8') && typeof tg?.shareToStory === 'function') {
-        const hostedMediaUrl = 'https://app8837501303.tgcloud.ai/story-banner.png';
+        const themeMap = {
+          obsidian: 'story-obsidian.png',
+          flame: 'story-flame.png',
+          emerald: 'story-emerald.png',
+          violet: 'story-violet.png',
+          cyan: 'story-cyan.png',
+        };
+        const bannerFile = themeMap[selectedThemeId] || 'story-banner.png';
+        const hostedMediaUrl = `https://app8837501303.tgcloud.ai/${bannerFile}`;
         tg.shareToStory(hostedMediaUrl, {
           text: shareText,
           widget_link: {
