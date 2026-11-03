@@ -85,6 +85,20 @@ const STORY_THEMES = [
   },
 ];
 
+export function getStoryBannerUrl(streak = 0, themeId = 'obsidian') {
+  const validThemes = ['obsidian', 'flame', 'emerald', 'violet', 'cyan'];
+  const theme = validThemes.includes(themeId) ? themeId : 'obsidian';
+
+  let tier = '0';
+  const num = Number(streak) || 0;
+  if (num >= 30) tier = '30';
+  else if (num >= 7) tier = '7';
+  else if (num >= 1) tier = 'active';
+  else tier = '0';
+
+  return `https://app8837501303.tgcloud.ai/story-${theme}-${tier}.png`;
+}
+
 export default function ShareStoryModal({
   open = false,
   onClose,
@@ -118,6 +132,8 @@ export default function ShareStoryModal({
     }, 2800);
   };
 
+  const numStreak = Number(streak) || 0;
+
   // Derive week display
   const daysShort = t('days_short') || ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   const normalizedWeek = weekDays.length === 7
@@ -125,26 +141,22 @@ export default function ShareStoryModal({
         ...wd,
         label: Array.isArray(daysShort) && daysShort[i] ? daysShort[i] : wd.dayName || 'Day',
       }))
-    : [
-        { label: 'Mon', completed: true },
-        { label: 'Tue', completed: true },
-        { label: 'Wed', completed: true },
-        { label: 'Thu', completed: true },
-        { label: 'Fri', completed: true },
-        { label: 'Sat', completed: true },
-        { label: 'Sun', completed: false },
-      ];
+    : daysShort.map((label, idx) => ({
+        label,
+        completed: numStreak > 0 && idx < Math.min(numStreak, 6),
+      }));
 
-  // Derive badge text
-  let badgeText = t('share_badge_unstoppable');
-  if (streak >= 30) badgeText = t('share_badge_champion');
-  else if (streak >= 7) badgeText = t('share_badge_unstoppable');
-  else badgeText = t('share_badge_onfire');
+  // Derive badge text matching real streak
+  let badgeText = t('share_badge_day1') || 'DAY 1 STARTS TODAY';
+  if (numStreak >= 30) badgeText = t('share_badge_champion');
+  else if (numStreak >= 7) badgeText = t('share_badge_unstoppable');
+  else if (numStreak >= 1) badgeText = t('share_badge_onfire');
+  else badgeText = t('share_badge_day1') || 'DAY 1 STARTS TODAY';
 
   // Share message text
   const shareText = habit
     ? t('share_habit_text').replace('{name}', habit.name)
-    : t('share_streak_text').replace('{streak}', String(streak));
+    : t('share_streak_text').replace('{streak}', String(numStreak));
 
   /**
    * Render high-resolution 1080x1920 Story Canvas matching App Preview 1:1
@@ -305,10 +317,18 @@ export default function ShareStoryModal({
           W / 2,
           heroCenterY + 240
         );
+      } else if (numStreak === 0) {
+        ctx.font = '900 80px "Plus Jakarta Sans", system-ui, sans-serif';
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillText('DAY 1', W / 2, heroCenterY + 180);
+
+        ctx.font = '700 30px "Plus Jakarta Sans", system-ui, sans-serif';
+        ctx.fillStyle = activeStoryTheme.accent;
+        ctx.fillText('STARTS TODAY', W / 2, heroCenterY + 240);
       } else {
         ctx.font = '900 130px "Plus Jakarta Sans", system-ui, sans-serif';
         ctx.fillStyle = activeStoryTheme.accent;
-        ctx.fillText(String(streak), W / 2, heroCenterY + 180);
+        ctx.fillText(String(numStreak), W / 2, heroCenterY + 180);
 
         ctx.font = '900 32px "Plus Jakarta Sans", system-ui, sans-serif';
         ctx.fillStyle = '#FFFFFF';
@@ -434,15 +454,7 @@ export default function ShareStoryModal({
 
       // Second check: Telegram WebApp Bot API 7.8+ shareToStory
       if (tg?.isVersionAtLeast?.('7.8') && typeof tg?.shareToStory === 'function') {
-        const themeMap = {
-          obsidian: 'story-obsidian.png',
-          flame: 'story-flame.png',
-          emerald: 'story-emerald.png',
-          violet: 'story-violet.png',
-          cyan: 'story-cyan.png',
-        };
-        const bannerFile = themeMap[selectedThemeId] || 'story-banner.png';
-        const hostedMediaUrl = `https://app8837501303.tgcloud.ai/${bannerFile}`;
+        const hostedMediaUrl = getStoryBannerUrl(numStreak, selectedThemeId);
         tg.shareToStory(hostedMediaUrl, {
           text: shareText,
           widget_link: {
@@ -709,13 +721,27 @@ export default function ShareStoryModal({
                     {habit.target} {habit.unit || ''}
                   </p>
                 </div>
+              ) : numStreak === 0 ? (
+                <>
+                  <span
+                    className="text-2xl font-black tracking-tight leading-none text-white"
+                  >
+                    DAY 1
+                  </span>
+                  <span
+                    className="text-[10px] font-extrabold tracking-widest uppercase mt-0.5"
+                    style={{ color: activeStoryTheme.accent }}
+                  >
+                    STARTS TODAY
+                  </span>
+                </>
               ) : (
                 <>
                   <span
                     className="text-4xl font-black tracking-tight leading-none"
                     style={{ color: activeStoryTheme.accent }}
                   >
-                    {streak}
+                    {numStreak}
                   </span>
                   <span className="text-[10px] font-extrabold text-white tracking-widest uppercase mt-0.5">
                     {t('streak_days')}

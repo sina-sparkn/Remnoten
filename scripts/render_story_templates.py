@@ -2,27 +2,17 @@
 """
 scripts/render_story_templates.py
 Uses headless Chromium to render pixel-perfect, world-class HTML/CSS/SVG Story Banners.
-Outputs 1080x1920 full-bleed images matching native iOS/Telegram story design.
+Outputs full-bleed 1080x1920 images matching real user streak tiers (0, active, 7, 30+).
 """
 import os
 import subprocess
 import base64
+import shutil
 
 OUTPUT_DIR = "public"
 DIST_DIR = "dist"
 
 THEMES = [
-    {
-        "id": "banner",
-        "name": "Obsidian",
-        "primary": "#8B5CF6",
-        "secondary": "#A855F7",
-        "glow": "rgba(139, 92, 246, 0.4)",
-        "badge_bg": "rgba(139, 92, 246, 0.15)",
-        "badge_border": "rgba(139, 92, 246, 0.35)",
-        "bg_gradient": "linear-gradient(180deg, #0A0A10 0%, #151326 40%, #1A1730 60%, #08080E 100%)",
-        "badge_text": "UNSTOPPABLE STREAK",
-    },
     {
         "id": "obsidian",
         "name": "Obsidian",
@@ -32,7 +22,6 @@ THEMES = [
         "badge_bg": "rgba(139, 92, 246, 0.15)",
         "badge_border": "rgba(139, 92, 246, 0.35)",
         "bg_gradient": "linear-gradient(180deg, #0A0A10 0%, #151326 40%, #1A1730 60%, #08080E 100%)",
-        "badge_text": "UNSTOPPABLE STREAK",
     },
     {
         "id": "flame",
@@ -43,7 +32,6 @@ THEMES = [
         "badge_bg": "rgba(255, 87, 34, 0.15)",
         "badge_border": "rgba(255, 87, 34, 0.35)",
         "bg_gradient": "linear-gradient(180deg, #0E0604 0%, #24110A 40%, #2A140C 60%, #0A0403 100%)",
-        "badge_text": "ON FIRE",
     },
     {
         "id": "emerald",
@@ -54,7 +42,6 @@ THEMES = [
         "badge_bg": "rgba(16, 185, 129, 0.15)",
         "badge_border": "rgba(16, 185, 129, 0.35)",
         "bg_gradient": "linear-gradient(180deg, #050E09 0%, #0D2619 40%, #112F20 60%, #030A06 100%)",
-        "badge_text": "CONSISTENCY MASTER",
     },
     {
         "id": "violet",
@@ -65,7 +52,6 @@ THEMES = [
         "badge_bg": "rgba(236, 72, 153, 0.15)",
         "badge_border": "rgba(236, 72, 153, 0.35)",
         "bg_gradient": "linear-gradient(180deg, #0F060D 0%, #281023 40%, #2F1329 60%, #0B0409 100%)",
-        "badge_text": "HABIT CHAMPION",
     },
     {
         "id": "cyan",
@@ -76,7 +62,45 @@ THEMES = [
         "badge_bg": "rgba(6, 182, 212, 0.15)",
         "badge_border": "rgba(6, 182, 212, 0.35)",
         "bg_gradient": "linear-gradient(180deg, #040C12 0%, #0D2534 40%, #112E40 60%, #02080D 100%)",
-        "badge_text": "DAILY DISCIPLINE",
+    },
+]
+
+STREAK_TIERS = [
+    {
+        "tier": "0",
+        "badge": "DAY 1 STARTS TODAY",
+        "title": "Start Your Streak.",
+        "subtitle": "Today is Day 1. Every habit champion starts with a single step.",
+        "completed_count": 0,
+        "active_index": 0, # Today ready to be checked
+        "cta": "Start your streak on Telegram • @remnotenbot",
+    },
+    {
+        "tier": "active",
+        "badge": "HABIT IN PROGRESS",
+        "title": "Building Momentum.",
+        "subtitle": "Small daily disciplines create extraordinary lifelong results.",
+        "completed_count": 3,
+        "active_index": 3,
+        "cta": "Keep the fire burning • @remnotenbot",
+    },
+    {
+        "tier": "7",
+        "badge": "UNSTOPPABLE STREAK",
+        "title": "7+ Days of Discipline.",
+        "subtitle": "One full week of unbroken dedication. Unstoppable!",
+        "completed_count": 6,
+        "active_index": 6,
+        "cta": "Track your streak on Telegram • @remnotenbot",
+    },
+    {
+        "tier": "30",
+        "badge": "30+ DAYS MASTERY",
+        "title": "Habit Mastery.",
+        "subtitle": "A full month of unbroken daily excellence. True mastery achieved.",
+        "completed_count": 7,
+        "active_index": -1,
+        "cta": "Join the champions on Telegram • @remnotenbot",
     },
 ]
 
@@ -87,14 +111,47 @@ def load_logo_base64():
             return base64.b64encode(f.read()).decode("utf-8")
     return ""
 
-def build_html(theme, logo_b64):
+def build_html(theme, tier_data, logo_b64):
     p = theme["primary"]
     s = theme["secondary"]
     glow = theme["glow"]
     badge_bg = theme["badge_bg"]
     badge_border = theme["badge_border"]
     bg_grad = theme["bg_gradient"]
-    badge_text = theme["badge_text"]
+
+    badge_text = tier_data["badge"]
+    title_text = tier_data["title"]
+    sub_text = tier_data["subtitle"]
+    completed_count = tier_data["completed_count"]
+    active_idx = tier_data["active_index"]
+    cta_text = tier_data["cta"]
+
+    days = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"]
+    tracker_html = ""
+
+    for i, day in enumerate(days):
+        is_completed = i < completed_count
+        is_active = (i == active_idx)
+
+        if is_completed:
+            circle_content = f'''<div class="day-circle completed">
+              <svg class="check-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </div>'''
+        elif is_active:
+            circle_content = f'''<div class="day-circle active">
+              <div style="width: 14px; height: 14px; border-radius: 50%; background: {p};"></div>
+            </div>'''
+        else:
+            circle_content = f'''<div class="day-circle empty">
+              <div style="width: 8px; height: 8px; border-radius: 50%; background: rgba(255, 255, 255, 0.15);"></div>
+            </div>'''
+
+        tracker_html += f'''
+        <div class="day-col">
+          <span class="day-label">{day}</span>
+          {circle_content}
+        </div>
+        '''
 
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -382,6 +439,11 @@ def build_html(theme, logo_b64):
     box-shadow: 0 0 20px {glow};
   }}
 
+  .day-circle.empty {{
+    background: rgba(255, 255, 255, 0.03);
+    border: 1.5px solid rgba(255, 255, 255, 0.08);
+  }}
+
   .check-icon {{
     width: 24px;
     height: 24px;
@@ -477,53 +539,12 @@ def build_html(theme, logo_b64):
       </div>
 
       <!-- Hero Headline -->
-      <h1 class="hero-title">Build Better Habits.</h1>
-      <p class="hero-subtitle">Small daily disciplines create extraordinary lifelong results.</p>
+      <h1 class="hero-title">{title_text}</h1>
+      <p class="hero-subtitle">{sub_text}</p>
 
       <!-- 7-Day Consistency Tracker -->
       <div class="tracker-box">
-        <div class="day-col">
-          <span class="day-label">MON</span>
-          <div class="day-circle completed">
-            <svg class="check-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
-          </div>
-        </div>
-        <div class="day-col">
-          <span class="day-label">TUE</span>
-          <div class="day-circle completed">
-            <svg class="check-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
-          </div>
-        </div>
-        <div class="day-col">
-          <span class="day-label">WED</span>
-          <div class="day-circle completed">
-            <svg class="check-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
-          </div>
-        </div>
-        <div class="day-col">
-          <span class="day-label">THU</span>
-          <div class="day-circle completed">
-            <svg class="check-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
-          </div>
-        </div>
-        <div class="day-col">
-          <span class="day-label">FRI</span>
-          <div class="day-circle completed">
-            <svg class="check-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
-          </div>
-        </div>
-        <div class="day-col">
-          <span class="day-label">SAT</span>
-          <div class="day-circle completed">
-            <svg class="check-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
-          </div>
-        </div>
-        <div class="day-col">
-          <span class="day-label">SUN</span>
-          <div class="day-circle active">
-            <div style="width: 14px; height: 14px; border-radius: 50%; background: {p};"></div>
-          </div>
-        </div>
+        {tracker_html}
       </div>
 
     </div>
@@ -534,7 +555,7 @@ def build_html(theme, logo_b64):
       <svg width="34" height="34" viewBox="0 0 24 24" fill="{p}">
         <path d="M21.5 2.5L2.5 10.5L9.5 13.5L18.5 6.5L11.5 15.5L19.5 21.5L21.5 2.5Z"/>
       </svg>
-      <span class="cta-text">Start your streak on Telegram &bull; <span class="cta-highlight">@remnotenbot</span></span>
+      <span class="cta-text">{cta_text}</span>
     </div>
 
     <!-- Slogan Footer -->
@@ -547,11 +568,12 @@ def build_html(theme, logo_b64):
 </body>
 </html>"""
 
-def render_banner(theme, logo_b64):
-    html_content = build_html(theme, logo_b64)
-    tmp_html = f"/tmp/story_{theme['id']}.html"
-    out_pub = os.path.join(OUTPUT_DIR, f"story-{theme['id']}.png")
-    out_dist = os.path.join(DIST_DIR, f"story-{theme['id']}.png")
+def render_image(theme, tier_data, logo_b64):
+    html_content = build_html(theme, tier_data, logo_b64)
+    tmp_html = f"/tmp/story_{theme['id']}_{tier_data['tier']}.html"
+    filename = f"story-{theme['id']}-{tier_data['tier']}.png"
+    out_pub = os.path.join(OUTPUT_DIR, filename)
+    out_dist = os.path.join(DIST_DIR, filename)
 
     with open(tmp_html, "w", encoding="utf-8") as f:
         f.write(html_content)
@@ -561,7 +583,7 @@ def render_banner(theme, logo_b64):
         "--headless",
         "--disable-gpu",
         "--no-sandbox",
-        f"--user-data-dir=/tmp/chromium-story-profile-{theme['id']}",
+        f"--user-data-dir=/tmp/chromium-story-profile-{theme['id']}-{tier_data['tier']}",
         "--hide-scrollbars",
         "--window-size=1080,1920",
         f"--screenshot={out_pub}",
@@ -571,16 +593,15 @@ def render_banner(theme, logo_b64):
     subprocess.run(cmd, check=True)
 
     # Copy to dist
-    with open(out_pub, "rb") as src, open(out_dist, "wb") as dst:
-        dst.write(src.read())
+    shutil.copyfile(out_pub, out_dist)
 
-    # Cleanup tmp html
     try:
         os.remove(tmp_html)
     except:
         pass
 
-    print(f"✓ Rendered story-{theme['id']}.png (1080x1920)")
+    print(f"✓ Rendered {filename}")
+    return out_pub
 
 def main():
     os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -588,7 +609,19 @@ def main():
     logo_b64 = load_logo_base64()
 
     for theme in THEMES:
-        render_banner(theme, logo_b64)
+        for tier_data in STREAK_TIERS:
+            out_file = render_image(theme, tier_data, logo_b64)
+
+            # If this is tier 0, also create the fallback unversioned banner: story-<theme>.png
+            if tier_data["tier"] == "0":
+                fallback_name = f"story-{theme['id']}.png"
+                shutil.copyfile(out_file, os.path.join(OUTPUT_DIR, fallback_name))
+                shutil.copyfile(out_file, os.path.join(DIST_DIR, fallback_name))
+
+                # If this is obsidian tier 0, also create story-banner.png (default)
+                if theme["id"] == "obsidian":
+                    shutil.copyfile(out_file, os.path.join(OUTPUT_DIR, "story-banner.png"))
+                    shutil.copyfile(out_file, os.path.join(DIST_DIR, "story-banner.png"))
 
 if __name__ == "__main__":
     main()
