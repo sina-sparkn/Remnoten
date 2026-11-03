@@ -69,7 +69,7 @@ function ReminderRowCard({ reminder, isFirst, onToggleReminder, onEditReminder, 
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 min-w-0">
-            <AutoScrollText as="h3" dir="auto" className="text-[15px] font-bold text-white tracking-tight text-start flex-1 min-w-0">
+            <AutoScrollText as="h3" className="text-[15px] font-bold text-white tracking-tight text-start flex-1 min-w-0">
               {reminder.text}
             </AutoScrollText>
             {priorityKey === 'High' && (
@@ -148,7 +148,7 @@ export default function RemindersScreen({
   const { currentTheme } = useTheme();
 
   return (
-    <div className="flex-1 px-5 pt-3 pb-32">
+    <div className="flex-1 px-5 pt-3 pb-36">
       {/* Header */}
       <div className="mb-5">
         <h1 className="text-2xl font-black text-white tracking-tight">{t('reminders_title')}</h1>
@@ -180,7 +180,7 @@ export default function RemindersScreen({
       </div>
 
       {/* Floating Action Button with Apple Pill Styling */}
-      <div className="fixed bottom-[78px] left-1/2 -translate-x-1/2 w-full max-w-[440px] px-5 pointer-events-none z-30 flex justify-end rtl:justify-start">
+      <div className="fixed bottom-[calc(92px+var(--safe-bottom))] left-1/2 -translate-x-1/2 w-full max-w-[440px] px-5 pointer-events-none z-40 flex justify-end rtl:justify-start">
         <button
           id="tour-add-reminder"
           type="button"

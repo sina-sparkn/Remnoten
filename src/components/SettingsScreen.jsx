@@ -155,9 +155,9 @@ export default function SettingsScreen({ state, onLanguageChange, onOpenTutorial
                 <Volume2 size={18} />
               </div>
               <div className="min-w-0 flex-1">
-                <div className="text-[14px] font-bold text-white tracking-tight">
+                <AutoScrollText as="div" className="text-[14px] font-bold text-white tracking-tight">
                   {t('settings_sound_effects')}
-                </div>
+                </AutoScrollText>
                 <AutoScrollText className="text-[11px] text-[#8E8E93] font-medium mt-0.5">
                   {t('settings_sound_effects_desc')}
                 </AutoScrollText>
@@ -188,9 +188,9 @@ export default function SettingsScreen({ state, onLanguageChange, onOpenTutorial
                 <Vibrate size={18} />
               </div>
               <div className="min-w-0 flex-1">
-                <div className="text-[14px] font-bold text-white tracking-tight">
+                <AutoScrollText as="div" className="text-[14px] font-bold text-white tracking-tight">
                   {t('settings_haptics')}
-                </div>
+                </AutoScrollText>
                 <AutoScrollText className="text-[11px] text-[#8E8E93] font-medium mt-0.5">
                   {t('settings_haptics_desc')}
                 </AutoScrollText>
@@ -273,10 +273,10 @@ export default function SettingsScreen({ state, onLanguageChange, onOpenTutorial
                   </div>
 
                   <div className="min-w-0 flex-1">
-                    <div className="text-[14px] font-bold text-white tracking-tight truncate flex items-center gap-1.5">
-                      <span>{t(th.nameKey, th.name)}</span>
-                    </div>
-                    <AutoScrollText className="text-[11px] text-[#8E8E93] font-medium">
+                    <AutoScrollText as="div" className="text-[14px] font-bold text-white tracking-tight">
+                      {t(th.nameKey, th.name)}
+                    </AutoScrollText>
+                    <AutoScrollText className="text-[11px] text-[#8E8E93] font-medium mt-0.5">
                       {th.name}
                     </AutoScrollText>
                   </div>

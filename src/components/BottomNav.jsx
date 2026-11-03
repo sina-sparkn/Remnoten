@@ -1,11 +1,13 @@
 import React from 'react';
-import { Home, Settings } from 'lucide-react';
+import { Home, Bell, Settings } from 'lucide-react';
 import { HabitsNavIcon, TasksNavIcon } from './Icons.jsx';
 import { hapticLight, playTabSound } from '../api.js';
 import { useI18n } from '../lib/i18n.jsx';
+import { useTheme } from '../lib/theme.jsx';
 
 export default function BottomNav({ activeTab, onSelectTab }) {
   const { t } = useI18n();
+  const { currentTheme } = useTheme();
 
   const tabs = [
     {
@@ -13,8 +15,9 @@ export default function BottomNav({ activeTab, onSelectTab }) {
       label: t('nav_home'),
       renderIcon: (isActive) => (
         <Home
-          size={22}
-          className={isActive ? 'fill-[#ec4899] text-[#ec4899]' : 'text-[#8E8E93]'}
+          size={21}
+          color={isActive ? currentTheme.primary : '#8E8E93'}
+          className={isActive ? 'fill-current' : ''}
           strokeWidth={2}
         />
       ),
@@ -23,14 +26,26 @@ export default function BottomNav({ activeTab, onSelectTab }) {
       id: 'habits',
       label: t('nav_habits'),
       renderIcon: (isActive) => (
-        <HabitsNavIcon size={22} color={isActive ? '#ec4899' : '#8E8E93'} />
+        <HabitsNavIcon size={21} color={isActive ? currentTheme.primary : '#8E8E93'} />
       ),
     },
     {
       id: 'tasks',
       label: t('nav_tasks'),
       renderIcon: (isActive) => (
-        <TasksNavIcon size={22} color={isActive ? '#ec4899' : '#8E8E93'} />
+        <TasksNavIcon size={21} color={isActive ? currentTheme.primary : '#8E8E93'} />
+      ),
+    },
+    {
+      id: 'reminders',
+      label: t('nav_reminders'),
+      renderIcon: (isActive) => (
+        <Bell
+          size={21}
+          color={isActive ? currentTheme.primary : '#8E8E93'}
+          className={isActive ? 'fill-current' : ''}
+          strokeWidth={2}
+        />
       ),
     },
     {
@@ -38,8 +53,8 @@ export default function BottomNav({ activeTab, onSelectTab }) {
       label: t('nav_settings'),
       renderIcon: (isActive) => (
         <Settings
-          size={22}
-          color={isActive ? '#ec4899' : '#8E8E93'}
+          size={21}
+          color={isActive ? currentTheme.primary : '#8E8E93'}
           strokeWidth={2}
         />
       ),
@@ -68,16 +83,18 @@ export default function BottomNav({ activeTab, onSelectTab }) {
             <div
               className="flex items-center justify-center transition-transform duration-200"
               style={{
-                filter: isActive ? 'drop-shadow(0 0 8px rgba(236,72,153,0.5))' : 'none',
+                filter: isActive ? `drop-shadow(0 0 8px ${currentTheme.primary}75)` : 'none',
                 transform: isActive ? 'scale(1.06)' : 'scale(1)',
               }}
             >
               {tab.renderIcon(isActive)}
             </div>
             <span
-              className={`text-[10px] transition-all duration-150 ${
-                isActive ? 'font-bold text-[#ec4899]' : 'font-medium text-[#8E8E93]'
-              }`}
+              className="text-[10px] transition-all duration-150"
+              style={{
+                fontWeight: isActive ? 700 : 500,
+                color: isActive ? currentTheme.primary : '#8E8E93',
+              }}
             >
               {tab.label}
             </span>

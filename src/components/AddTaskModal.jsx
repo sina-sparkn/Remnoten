@@ -446,9 +446,9 @@ export default function AddTaskModal({
                     <span className="text-[14px] font-bold text-white tracking-tight block">
                       {t('task_due_time_title')}
                     </span>
-                    <span className="text-[11.5px] font-semibold text-[#8E8E93] block mt-0.5 truncate">
+                    <AutoScrollText className="text-[11.5px] font-semibold text-[#8E8E93] block mt-0.5">
                       {timeHHMM}
-                    </span>
+                    </AutoScrollText>
                   </div>
                 </div>
 

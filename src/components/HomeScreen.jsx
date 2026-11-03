@@ -76,6 +76,10 @@ export default function HomeScreen({
 
   // 1. Calculate Today's Tasks
   const todayRaw = new Date().toISOString().slice(0, 10);
+  const tomorrowDate = new Date();
+  tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+  const tomorrowRaw = tomorrowDate.toISOString().slice(0, 10);
+
   const isTodayTask = (todo) => {
     if (!todo) return false;
     if (todo.dueDateRaw) {
@@ -124,10 +128,11 @@ export default function HomeScreen({
   if (activeReminders.length > 0) {
     activeReminders.slice(0, 3).forEach((r) => {
       const repeatLabel = r.repeat ? (r.repeatRate === 'weekly' ? 'Weekly' : 'Daily') : 'Once';
+      const reminderSubtitle = r.timeHHMM ? `${repeatLabel} · ${r.timeHHMM}` : repeatLabel;
       upcomingItems.push({
         id: `reminder-${r.id}`,
         title: r.text,
-        subtitle: `Tomorrow · ${repeatLabel}`,
+        subtitle: reminderSubtitle,
         type: 'reminder',
         icon: r.icon || 'bell',
         raw: r,
@@ -141,10 +146,19 @@ export default function HomeScreen({
 
   if (upcomingTasks.length > 0) {
     upcomingTasks.slice(0, 3).forEach((task) => {
+      let taskSubtitle;
+      if (task.dueDateRaw === tomorrowRaw) {
+        taskSubtitle = `Tomorrow · ${task.dueTime || 'Task'}`;
+      } else if (task.dueDate) {
+        taskSubtitle = task.dueDate.replace(' • ', ' · ');
+      } else {
+        taskSubtitle = task.dueDateRaw ? `${task.dueDateRaw} · ${task.dueTime || 'Task'}` : 'Upcoming';
+      }
+
       upcomingItems.push({
         id: `task-${task.id}`,
         title: task.text,
-        subtitle: `Tomorrow · ${task.dueTime || 'Task'}`,
+        subtitle: taskSubtitle,
         type: 'task',
         icon: task.icon || 'todo',
         raw: task,
@@ -165,6 +179,7 @@ export default function HomeScreen({
         </h1>
 
         <button
+          id="tour-share-btn"
           type="button"
           onClick={handleShare}
           className="w-10 h-10 rounded-full bg-[#18181f] border border-white/[0.06] flex items-center justify-center text-white hover:bg-white/10 active:scale-95 transition-all shadow-sm cursor-pointer"
@@ -253,7 +268,7 @@ export default function HomeScreen({
       </div>
 
       {/* ─── "Today" Section ─────────────────────────────────────────── */}
-      <div className="mt-7 mb-2">
+      <div id="tour-today-section" className="mt-7 mb-2">
         <div className="flex items-center justify-between mb-3 px-1">
           <h2 className="text-[24px] font-bold text-white tracking-tight">
             {t('today')}
@@ -351,7 +366,7 @@ export default function HomeScreen({
       </div>
 
       {/* ─── "Upcoming" Section ──────────────────────────────────────── */}
-      <div className="mt-7 mb-2">
+      <div id="tour-upcoming-section" className="mt-7 mb-2">
         <div className="flex items-center justify-between mb-3 px-1">
           <h2 className="text-[24px] font-bold text-white tracking-tight">
             {t('filter_upcoming') || 'Upcoming'}
@@ -396,14 +411,12 @@ export default function HomeScreen({
                       />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="text-[16px] font-medium text-white leading-snug">
-                        <AutoScrollText dir="auto">
-                          {item.title}
-                        </AutoScrollText>
-                      </div>
-                      <div className="text-[13px] text-[#8e8e93] mt-0.5">
+                      <AutoScrollText as="div" className="text-[16px] font-medium text-white leading-snug">
+                        {item.title}
+                      </AutoScrollText>
+                      <AutoScrollText as="div" className="text-[13px] text-[#8e8e93] mt-0.5">
                         {item.subtitle}
-                      </div>
+                      </AutoScrollText>
                     </div>
                   </div>
                   <ChevronRight size={18} className="text-[#545458] shrink-0 rtl:rotate-180" />
@@ -430,12 +443,12 @@ export default function HomeScreen({
                   <HabitIcon name="dumbbell" size={18} color={currentTheme.primary} />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="text-[16px] font-medium text-white leading-snug truncate">
+                  <AutoScrollText as="div" className="text-[16px] font-medium text-white leading-snug">
                     Workout
-                  </div>
-                  <div className="text-[13px] text-[#8e8e93] mt-0.5">
+                  </AutoScrollText>
+                  <AutoScrollText as="div" className="text-[13px] text-[#8e8e93] mt-0.5">
                     Tomorrow · Daily
-                  </div>
+                  </AutoScrollText>
                 </div>
               </div>
               <ChevronRight size={18} className="text-[#545458] shrink-0 rtl:rotate-180" />
@@ -466,7 +479,7 @@ function TodayTaskRow({ todo, isFirst, onToggleTodo, onEditTodo, onItemLongPress
       className="flex items-center justify-between p-4 cursor-pointer hover:bg-white/[0.02] active:bg-white/[0.04] transition-colors select-none group"
     >
       <div className="flex items-center gap-3.5 min-w-0 flex-1 pr-2">
-        {/* Circular Checkbox (Dynamically themed) */}
+        {/* Circular Checkbox (Dynamically themed, comfortable size) */}
         <button
           type="button"
           onClick={(e) => {
@@ -480,7 +493,7 @@ function TodayTaskRow({ todo, isFirst, onToggleTodo, onEditTodo, onItemLongPress
             }
             if (onToggleTodo) onToggleTodo(todo.id);
           }}
-          className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-all cursor-pointer ${
+          className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-all cursor-pointer ${
             todo.done ? '' : 'border-2 border-[#545458] hover:border-zinc-400'
           }`}
           style={
@@ -493,33 +506,19 @@ function TodayTaskRow({ todo, isFirst, onToggleTodo, onEditTodo, onItemLongPress
               : undefined
           }
         >
-          {todo.done && <Check size={14} strokeWidth={3} color={currentTheme.primaryForeground} />}
+          {todo.done && <Check size={16} strokeWidth={3} color={currentTheme.primaryForeground} />}
         </button>
-
-        {/* Task Icon Squircle */}
-        <div
-          className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 transition-colors"
-          style={{
-            backgroundColor: todo.done ? 'rgba(48, 209, 88, 0.15)' : '#1C1C22',
-            border: todo.done ? '1px solid rgba(48, 209, 88, 0.25)' : '1px solid rgba(255,255,255,0.06)',
-          }}
-        >
-          <HabitIcon
-            name={todo.icon || 'todo'}
-            size={18}
-            color={todo.done ? '#30D158' : '#ffffff'}
-          />
-        </div>
 
         {/* Text Details */}
         <div className="min-w-0 flex-1">
-          <div
-            className={`text-[16px] font-medium leading-snug truncate ${
+          <AutoScrollText
+            as="div"
+            className={`text-[16px] font-medium leading-snug ${
               todo.done ? 'text-white/50 line-through' : 'text-white'
             }`}
           >
             {todo.text}
-          </div>
+          </AutoScrollText>
           <div className="text-[13px] text-[#8e8e93] mt-0.5">
             Task · Today
           </div>
@@ -552,7 +551,7 @@ function TodayHabitRow({ habit, onToggleHabit, onOpenHabitDetail, onItemLongPres
       className="flex items-center justify-between p-4 cursor-pointer hover:bg-white/[0.02] active:bg-white/[0.04] transition-colors select-none group"
     >
       <div className="flex items-center gap-3.5 min-w-0 flex-1 pr-2">
-        {/* Circular Checkbox (Dynamically themed when done) */}
+        {/* Circular Checkbox (Dynamically themed when done, comfortable size) */}
         <button
           type="button"
           onClick={(e) => {
@@ -566,7 +565,7 @@ function TodayHabitRow({ habit, onToggleHabit, onOpenHabitDetail, onItemLongPres
             }
             if (onToggleHabit) onToggleHabit(habit.id);
           }}
-          className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-all cursor-pointer ${
+          className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-all cursor-pointer ${
             isDone ? '' : 'border-2 border-[#545458] hover:border-zinc-400'
           }`}
           style={
@@ -579,33 +578,19 @@ function TodayHabitRow({ habit, onToggleHabit, onOpenHabitDetail, onItemLongPres
               : undefined
           }
         >
-          {isDone && <Check size={14} strokeWidth={3} color={currentTheme.primaryForeground} />}
+          {isDone && <Check size={16} strokeWidth={3} color={currentTheme.primaryForeground} />}
         </button>
-
-        {/* Habit Icon Squircle */}
-        <div
-          className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 transition-colors"
-          style={{
-            backgroundColor: isDone ? currentTheme.primarySubtle : '#1C1C22',
-            border: isDone ? `1px solid ${currentTheme.primarySubtleBorder}` : '1px solid rgba(255,255,255,0.06)',
-          }}
-        >
-          <HabitIcon
-            name={habit.icon || habit.name}
-            size={18}
-            color={isDone ? currentTheme.primary : '#ffffff'}
-          />
-        </div>
 
         {/* Text Details */}
         <div className="min-w-0 flex-1">
-          <div
-            className={`text-[16px] font-medium leading-snug truncate ${
+          <AutoScrollText
+            as="div"
+            className={`text-[16px] font-medium leading-snug ${
               isDone ? 'text-white/50 line-through' : 'text-white'
             }`}
           >
             {habit.name}
-          </div>
+          </AutoScrollText>
           <div className="text-[13px] text-[#8e8e93] mt-0.5">
             Habit · Today
           </div>

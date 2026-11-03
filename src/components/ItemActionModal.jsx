@@ -103,10 +103,10 @@ export default function ItemActionModal({
             <HabitIcon name={iconName} size={22} color="var(--primary, #FF2442)" />
           </div>
           <div className="min-w-0 flex-1">
-            <AutoScrollText as="h3" dir="auto" className="text-[15px] font-bold text-white tracking-tight text-start">
+            <AutoScrollText as="h3" className="text-[15px] font-bold text-white tracking-tight text-start">
               {title}
             </AutoScrollText>
-            <AutoScrollText as="p" dir="auto" className="text-xs font-medium text-[#8E8E93] mt-0.5 text-start">
+            <AutoScrollText as="p" className="text-xs font-medium text-[#8E8E93] mt-0.5 text-start">
               {subtitle}
             </AutoScrollText>
           </div>

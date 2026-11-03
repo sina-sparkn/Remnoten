@@ -63,7 +63,6 @@ function TaskItemCard({
         <div className="min-w-0 flex-1">
           <AutoScrollText
             as="h3"
-            dir="auto"
             className={`text-[15px] font-bold tracking-tight text-start ${
               todo.done ? 'line-through text-[#8E8E93]' : 'text-white'
             }`}
@@ -71,9 +70,9 @@ function TaskItemCard({
             {todo.text}
           </AutoScrollText>
           <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-            <p className="text-xs font-medium text-[#8E8E93] text-start">
+            <AutoScrollText as="p" className="text-xs font-medium text-[#8E8E93] text-start">
               {todo.dueDate || t('default_due')}
-            </p>
+            </AutoScrollText>
             {isSearching && (
               <span
                 className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${
@@ -177,7 +176,7 @@ export default function TasksScreen({
   };
 
   return (
-    <div className="flex-1 px-5 pt-3 pb-32">
+    <div className="flex-1 px-5 pt-3 pb-36">
       {/* Header with Title */}
       <div className="mb-4">
         <h1 className="text-2xl font-black text-white tracking-tight">{t('tasks_title')}</h1>
@@ -345,7 +344,7 @@ export default function TasksScreen({
       </div>
 
       {/* Floating Action Button to add task */}
-      <div className="fixed bottom-[78px] left-1/2 -translate-x-1/2 w-full max-w-[440px] px-5 pointer-events-none z-30 flex justify-end rtl:justify-start">
+      <div className="fixed bottom-[calc(92px+var(--safe-bottom))] left-1/2 -translate-x-1/2 w-full max-w-[440px] px-5 pointer-events-none z-40 flex justify-end rtl:justify-start">
         <button
           id="tour-add-task"
           type="button"

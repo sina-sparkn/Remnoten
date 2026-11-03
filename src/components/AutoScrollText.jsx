@@ -3,33 +3,40 @@ import React, { useRef, useState, useEffect } from 'react';
 /**
  * AutoScrollText
  *
- * Smoothly slides text back and forth (ping-pong loop) when the text overflows its container,
- * allowing users to comfortably read the entire description without breaking layouts or
- * getting cut off with "...".
- * If the text fits within the container, it behaves statically with zero animation overhead.
+ * Implements a smooth, continuous infinite marquee loop (NOT ping-pong / go-and-return).
+ * - If the text fits in the container, it stays static with zero overhead.
+ * - If the text overflows, a seamless duplicate is rendered after a spacer gap.
+ * - Glides continuously in one direction with a gentle pause at the start of each loop,
+ *   looping seamlessly without any visual jump or reversing direction.
+ * - Flawlessly handles Persian / Arabic (RTL) and English / Cyrillic (LTR) scripts
+ *   without layout clipping or coordinate flipping.
+ * - Automatically pauses when touched or hovered so the user can read comfortably.
  */
 export default function AutoScrollText({
   children,
   className = '',
-  dir = 'auto',
+  dir,
   speed = 28, // pixels per second
-  pauseStart = 2.0, // seconds to pause at the start
-  pauseEnd = 1.6, // seconds to pause at the end
+  pauseStart = 1.6, // seconds to pause at the beginning of each loop cycle
+  gap = 42, // spacer gap between duplicated text in pixels
   as: Component = 'div',
+  style,
   ...rest
 }) {
   const containerRef = useRef(null);
+  const trackRef = useRef(null);
   const contentRef = useRef(null);
   const animationRef = useRef(null);
   const [isOverflowing, setIsOverflowing] = useState(false);
 
-  // Strip 'truncate' class if passed so the full text is rendered for sliding
+  // Strip 'truncate' class if passed so the full text width can be measured
   const cleanClassName = className.replace(/\btruncate\b/g, '').trim();
   const textTooltip = typeof children === 'string' ? children : undefined;
 
   useEffect(() => {
     const container = containerRef.current;
     const content = contentRef.current;
+    const track = trackRef.current;
     if (!container || !content) return;
 
     let isDisposed = false;
@@ -37,12 +44,14 @@ export default function AutoScrollText({
     const updateScrollAnimation = () => {
       if (isDisposed || !container || !content) return;
 
-      // Cancel previous animation cleanly
+      // Cancel any running animation cleanly
       if (animationRef.current) {
         animationRef.current.cancel();
         animationRef.current = null;
       }
-      content.style.transform = 'none';
+      if (track) {
+        track.style.transform = 'none';
+      }
 
       // Measure dimensions
       const containerWidth = container.clientWidth;
@@ -55,56 +64,48 @@ export default function AutoScrollText({
 
       // If no overflow (or negligible subpixel), stay static
       if (overflow <= 2) {
-        setIsOverflowing(false);
+        if (isOverflowing) setIsOverflowing(false);
         return;
       }
 
-      setIsOverflowing(true);
+      if (!isOverflowing) {
+        setIsOverflowing(true);
+        return; // will re-run on next render with duplicate span in place
+      }
 
-      // Provide breathing room at the end of the slide
-      const extraPad = 12;
-      const distance = overflow + extraPad;
+      // If overflowing and track is present with duplicate span
+      if (track) {
+        const cycleDistance = Math.round(contentWidth + gap);
+        const scrollDuration = Math.max(2.8, cycleDistance / speed);
+        const totalDuration = pauseStart + scrollDuration;
+        const pauseRatio = Math.min(0.4, pauseStart / totalDuration);
 
-      // Determine text direction (LTR vs RTL)
-      const computedDir = window.getComputedStyle(container).direction;
-      const isRtl = computedDir === 'rtl';
-      const targetX = isRtl ? distance : -distance;
+        // One-direction continuous loop keyframes (0 -> -cycleDistance -> seamless restart)
+        const keyframes = [
+          { transform: 'translateX(0)', offset: 0 },
+          { transform: 'translateX(0)', offset: pauseRatio },
+          { transform: `translateX(-${cycleDistance}px)`, offset: 1 },
+        ];
 
-      // Calculate readable, proportional durations
-      const slideDuration = Math.max(2.2, distance / speed);
-      const returnDuration = Math.max(1.8, distance / (speed * 1.35));
-      const totalDuration = pauseStart + slideDuration + pauseEnd + returnDuration;
-
-      // Fractional timeline offsets (0 to 1)
-      const t1 = pauseStart / totalDuration;
-      const t2 = (pauseStart + slideDuration) / totalDuration;
-      const t3 = (pauseStart + slideDuration + pauseEnd) / totalDuration;
-
-      const keyframes = [
-        { transform: 'translateX(0)', offset: 0, easing: 'ease-in-out' },
-        { transform: 'translateX(0)', offset: t1, easing: 'ease-in-out' },
-        { transform: `translateX(${targetX}px)`, offset: t2, easing: 'ease-in-out' },
-        { transform: `translateX(${targetX}px)`, offset: t3, easing: 'ease-in-out' },
-        { transform: 'translateX(0)', offset: 1 },
-      ];
-
-      try {
-        if (typeof content.animate === 'function') {
-          const anim = content.animate(keyframes, {
-            duration: totalDuration * 1000,
-            iterations: Infinity,
-          });
-          animationRef.current = anim;
+        try {
+          if (typeof track.animate === 'function') {
+            const anim = track.animate(keyframes, {
+              duration: totalDuration * 1000,
+              iterations: Infinity,
+              easing: 'linear',
+            });
+            animationRef.current = anim;
+          }
+        } catch (err) {
+          console.warn('AutoScrollText continuous marquee failed:', err);
         }
-      } catch (err) {
-        console.warn('AutoScrollText animation failed:', err);
       }
     };
 
     // Initial measurement
     updateScrollAnimation();
 
-    // Re-check once web fonts have fully loaded to ensure precision
+    // Re-check once web fonts (like Persian Vazirmatn) have loaded
     if (typeof document !== 'undefined' && document.fonts?.ready) {
       document.fonts.ready.then(() => {
         if (!isDisposed) updateScrollAnimation();
@@ -125,7 +126,7 @@ export default function AutoScrollText({
         animationRef.current = null;
       }
     };
-  }, [children, speed, pauseStart, pauseEnd]);
+  }, [children, speed, pauseStart, gap, isOverflowing]);
 
   const handlePointerEnter = () => {
     if (animationRef.current && animationRef.current.playState === 'running') {
@@ -142,19 +143,63 @@ export default function AutoScrollText({
   return (
     <Component
       ref={containerRef}
-      dir={dir}
       title={textTooltip}
       onPointerEnter={handlePointerEnter}
       onPointerLeave={handlePointerLeave}
+      onTouchStart={handlePointerEnter}
+      onTouchEnd={handlePointerLeave}
       className={`overflow-hidden relative max-w-full block select-none ${cleanClassName}`}
+      style={{
+        maskImage: isOverflowing
+          ? 'linear-gradient(to right, transparent 0%, black 6px, black calc(100% - 6px), transparent 100%)'
+          : 'none',
+        WebkitMaskImage: isOverflowing
+          ? 'linear-gradient(to right, transparent 0%, black 6px, black calc(100% - 6px), transparent 100%)'
+          : 'none',
+        ...style,
+      }}
       {...rest}
     >
-      <span
-        ref={contentRef}
-        className="inline-block whitespace-nowrap will-change-transform"
+      <div
+        ref={trackRef}
+        className="inline-flex items-center whitespace-nowrap will-change-transform"
+        style={{
+          direction: 'ltr',
+          width: 'max-content',
+        }}
       >
-        {children}
-      </span>
+        {/* Primary copy */}
+        <span
+          ref={contentRef}
+          className="shrink-0 inline-block whitespace-nowrap"
+          dir={dir || 'auto'}
+        >
+          {children}
+        </span>
+
+        {/* Seamless duplicate copy and spacers (only rendered when overflowing) */}
+        {isOverflowing && (
+          <>
+            <span
+              className="shrink-0 inline-block select-none pointer-events-none"
+              style={{ width: `${gap}px` }}
+              aria-hidden="true"
+            />
+            <span
+              className="shrink-0 inline-block whitespace-nowrap"
+              dir={dir || 'auto'}
+              aria-hidden="true"
+            >
+              {children}
+            </span>
+            <span
+              className="shrink-0 inline-block select-none pointer-events-none"
+              style={{ width: `${gap}px` }}
+              aria-hidden="true"
+            />
+          </>
+        )}
+      </div>
     </Component>
   );
 }

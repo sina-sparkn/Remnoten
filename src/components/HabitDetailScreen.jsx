@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, Check, Edit3, Share2 } from 'lucide-react';
 import { WorkoutHeroLogo } from './Icons.jsx';
 import HabitIcon from './Icons.jsx';
 import HabitContributionHeatmap from './HabitContributionHeatmap.jsx';
+import AutoScrollText from './AutoScrollText.jsx';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { callEndpoint, hapticMedium, hapticSuccess, playCheckSound, playUncheckSound } from '../api.js';
@@ -156,10 +157,12 @@ export default function HabitDetailScreen({
             </div>
           )}
         </div>
-        <h1 dir="auto" className="text-2xl font-black text-white tracking-tight">{habit.name}</h1>
-        <p className="text-xs font-medium text-[#8E8E93] mt-0.5">
+        <AutoScrollText as="h1" className="text-2xl font-black text-white tracking-tight text-center">
+          {habit.name}
+        </AutoScrollText>
+        <AutoScrollText as="p" className="text-xs font-medium text-[#8E8E93] mt-0.5 text-center">
           {habit.frequency || t('freq_daily')} • {habit.unit ? `${habit.target} ${habit.unit}` : '30 min'}
-        </p>
+        </AutoScrollText>
       </div>
 
       {/* 365 Days GitHub-Style Contribution Heatmap Card with Month Names */}

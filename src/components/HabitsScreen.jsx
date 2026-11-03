@@ -37,12 +37,12 @@ function HabitRowCard({ habit, onToggleHabit, onOpenHabitDetail, onItemLongPress
             <HabitIcon name={habit.icon || habit.name} size={22} color={currentTheme.primary} />
           </div>
           <div className="min-w-0 flex-1">
-            <AutoScrollText as="h3" dir="auto" className="text-[15px] font-bold text-white tracking-tight text-start">
+            <AutoScrollText as="h3" className="text-[15px] font-bold text-white tracking-tight text-start">
               {habit.name}
             </AutoScrollText>
-            <p className="text-xs font-medium text-[#8E8E93] mt-0.5 text-start">
+            <AutoScrollText as="p" className="text-xs font-medium text-[#8E8E93] mt-0.5 text-start">
               {habit.frequency || t('freq_daily')}
-            </p>
+            </AutoScrollText>
           </div>
         </div>
 
@@ -72,7 +72,7 @@ export default function HabitsScreen({
   const { currentTheme } = useTheme();
 
   return (
-    <div className="flex-1 px-5 pt-3 pb-32">
+    <div className="flex-1 px-5 pt-3 pb-36">
       {/* Header */}
       <div className="mb-5">
         <h1 className="text-2xl font-black text-white tracking-tight">{t('habits_title')}</h1>
@@ -82,7 +82,7 @@ export default function HabitsScreen({
       </div>
 
       {/* Habit List */}
-      <div className="items-list">
+      <div id="tour-habits-feed" className="items-list">
         {habits.length === 0 && (
           <Card className="p-6 text-center">
             <p className="text-sm font-semibold text-white">{t('no_habits_created')}</p>
@@ -103,8 +103,9 @@ export default function HabitsScreen({
       </div>
 
       {/* Floating Action Button with Apple Pill Styling */}
-      <div className="fixed bottom-[78px] left-1/2 -translate-x-1/2 w-full max-w-[440px] px-5 pointer-events-none z-30 flex justify-end rtl:justify-start">
+      <div className="fixed bottom-[calc(92px+var(--safe-bottom))] left-1/2 -translate-x-1/2 w-full max-w-[440px] px-5 pointer-events-none z-40 flex justify-end rtl:justify-start">
         <button
+          id="tour-add-habit"
           type="button"
           onClick={() => {
             hapticMedium();

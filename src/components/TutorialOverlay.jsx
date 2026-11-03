@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Flame,
   Check,
@@ -7,7 +7,6 @@ import {
   Compass,
   ChevronRight,
   ChevronLeft,
-  X,
   Sparkles,
   ListFilter,
   CheckSquare,
@@ -26,10 +25,10 @@ export default function TutorialOverlay({ open, activeTab, onSwitchTab, onClose 
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [targetRect, setTargetRect] = useState(null);
 
-  // Define steps dynamically across Home, Tasks, and Reminders
+  // Define steps dynamically matching the new redesigned UI across Home, Habits, Tasks, and Reminders
   const steps = useMemo(() => {
-    const list = [
-      // 1. Home - Streak & Story
+    return [
+      // 1. Home - Hero Streak & Dual Progress Bars
       {
         id: 'streak',
         tab: 'home',
@@ -38,42 +37,43 @@ export default function TutorialOverlay({ open, activeTab, onSwitchTab, onClose 
         desc: t('tour_streak_desc'),
         icon: Flame,
       },
-      // 2. Home - Habit Check-in
+      // 2. Home - Today's Unified Action Feed
       {
-        id: 'habits',
+        id: 'today',
         tab: 'home',
-        selector: document.querySelector('#tour-habit-item')
-          ? '#tour-habit-item'
-          : '#tour-habits-feed',
-        title: t('tour_habits_title'),
-        desc: t('tour_habits_desc'),
+        selector: '#tour-today-section',
+        title: t('tour_today_title'),
+        desc: t('tour_today_desc'),
         icon: Check,
       },
-    ];
-
-    // 3. Home - Heatmap (if a habit card exists)
-    if (document.querySelector('#tour-heatmap')) {
-      list.push({
-        id: 'heatmap',
+      // 3. Home - Upcoming Schedule & Reminders
+      {
+        id: 'upcoming',
         tab: 'home',
-        selector: '#tour-heatmap',
-        title: t('tour_heatmap_title'),
-        desc: t('tour_heatmap_desc'),
+        selector: '#tour-upcoming-section',
+        title: t('tour_upcoming_title'),
+        desc: t('tour_upcoming_desc'),
         icon: Calendar,
-      });
-    }
-
-    list.push(
-      // 4. Home - Add Habit Button
+      },
+      // 4. Habits - 365-Day Activity Heatmaps
+      {
+        id: 'habits',
+        tab: 'habits',
+        selector: '#tour-habits-feed',
+        title: t('tour_habits_title'),
+        desc: t('tour_habits_desc'),
+        icon: Calendar,
+      },
+      // 5. Habits - Floating Add Habit Button
       {
         id: 'add_habit',
-        tab: 'home',
+        tab: 'habits',
         selector: '#tour-add-habit',
         title: t('tour_add_title'),
         desc: t('tour_add_desc'),
         icon: Plus,
       },
-      // 5. Tasks - Filter Tabs
+      // 6. Tasks - Smart Filter Tabs
       {
         id: 'tasks_filters',
         tab: 'tasks',
@@ -82,7 +82,7 @@ export default function TutorialOverlay({ open, activeTab, onSwitchTab, onClose 
         desc: t('tour_tasks_filters_desc'),
         icon: ListFilter,
       },
-      // 6. Tasks - To-Do List Feed
+      // 7. Tasks - To-Do List Feed
       {
         id: 'tasks_feed',
         tab: 'tasks',
@@ -91,7 +91,7 @@ export default function TutorialOverlay({ open, activeTab, onSwitchTab, onClose 
         desc: t('tour_tasks_feed_desc'),
         icon: CheckSquare,
       },
-      // 7. Tasks - Floating Add Task Button
+      // 8. Tasks - Floating Add Task Button
       {
         id: 'add_task',
         tab: 'tasks',
@@ -100,7 +100,7 @@ export default function TutorialOverlay({ open, activeTab, onSwitchTab, onClose 
         desc: t('tour_tasks_add_desc'),
         icon: Plus,
       },
-      // 8. Reminders - Smart Alarms Feed
+      // 9. Reminders - Smart Alarms Feed
       {
         id: 'reminders_feed',
         tab: 'reminders',
@@ -109,7 +109,7 @@ export default function TutorialOverlay({ open, activeTab, onSwitchTab, onClose 
         desc: t('tour_reminders_feed_desc'),
         icon: Bell,
       },
-      // 9. Reminders - Floating Add Reminder Button
+      // 10. Reminders - Floating Add Reminder Button
       {
         id: 'add_reminder',
         tab: 'reminders',
@@ -118,7 +118,7 @@ export default function TutorialOverlay({ open, activeTab, onSwitchTab, onClose 
         desc: t('tour_reminders_add_desc'),
         icon: AlarmClock,
       },
-      // 10. Bottom Navigation & Completion
+      // 11. Bottom Floating Navigation Dock
       {
         id: 'nav',
         tab: 'home',
@@ -126,10 +126,8 @@ export default function TutorialOverlay({ open, activeTab, onSwitchTab, onClose 
         title: t('tour_nav_title'),
         desc: t('tour_nav_desc'),
         icon: Compass,
-      }
-    );
-
-    return list;
+      },
+    ];
   }, [open, t]);
 
   const currentStep = steps[currentStepIndex] || steps[0];
@@ -174,9 +172,9 @@ export default function TutorialOverlay({ open, activeTab, onSwitchTab, onClose 
         });
       }
       updateTargetRect();
-    }, 220);
+    }, 240);
 
-    const retryTimer = setTimeout(updateTargetRect, 450);
+    const retryTimer = setTimeout(updateTargetRect, 480);
 
     return () => {
       clearTimeout(timer);
@@ -244,7 +242,7 @@ export default function TutorialOverlay({ open, activeTab, onSwitchTab, onClose 
   const spotY = targetRect ? Math.max(0, targetRect.top - pad) : 0;
   const spotWidth = targetRect ? targetRect.width + pad * 2 : 0;
   const spotHeight = targetRect ? targetRect.height + pad * 2 : 0;
-  const spotRadius = 16;
+  const spotRadius = targetRect && targetRect.height > 55 ? 26 : 18;
 
   // Tooltip position calculation (above or below the element)
   const windowHeight = typeof window !== 'undefined' ? window.innerHeight : 800;
@@ -279,11 +277,11 @@ export default function TutorialOverlay({ open, activeTab, onSwitchTab, onClose 
   const StepIcon = currentStep.icon || Sparkles;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden select-none animate-fade-in pointer-events-auto">
+    <div className="fixed inset-0 z-[100] overflow-hidden select-none animate-fade-in pointer-events-auto">
       {/* SVG Dimmed Backdrop with Transparent Cutout Mask for Target Element */}
       <svg
         className="fixed inset-0 w-full h-full pointer-events-none"
-        style={{ zIndex: 51 }}
+        style={{ zIndex: 101 }}
       >
         <defs>
           <mask id="tour-spotlight-mask">
@@ -315,7 +313,7 @@ export default function TutorialOverlay({ open, activeTab, onSwitchTab, onClose 
       {/* Click backdrop to skip tour */}
       <div
         className="fixed inset-0 cursor-pointer"
-        style={{ zIndex: 52 }}
+        style={{ zIndex: 102 }}
         onClick={handleComplete}
       />
 
@@ -324,7 +322,7 @@ export default function TutorialOverlay({ open, activeTab, onSwitchTab, onClose 
         <div
           className="fixed pointer-events-none transition-all duration-300 ease-out animate-pulse"
           style={{
-            zIndex: 53,
+            zIndex: 103,
             top: spotY,
             left: spotX,
             width: spotWidth,
@@ -339,7 +337,7 @@ export default function TutorialOverlay({ open, activeTab, onSwitchTab, onClose 
       {/* Floating On-Screen Tooltip Card */}
       <div
         className="fixed max-w-[390px] mx-auto transition-all duration-300 ease-out"
-        style={{ ...tooltipStyle, zIndex: 54 }}
+        style={{ ...tooltipStyle, zIndex: 104 }}
       >
         <div className="relative rounded-2xl bg-[#141418] border border-[#282830] shadow-2xl p-4 flex flex-col text-start">
           {/* Pointer Triangle Arrow pointing to the highlighted element */}
@@ -367,7 +365,7 @@ export default function TutorialOverlay({ open, activeTab, onSwitchTab, onClose 
             <button
               type="button"
               onClick={handleComplete}
-              className="text-[11px] font-semibold text-[#8E8E93] hover:text-white px-2 py-0.5 rounded-full bg-white/5 active:scale-95 transition-all"
+              className="text-[11px] font-semibold text-[#8E8E93] hover:text-white px-2 py-0.5 rounded-full bg-white/5 active:scale-95 transition-all cursor-pointer"
             >
               {t('tutorial_skip')}
             </button>
@@ -410,7 +408,7 @@ export default function TutorialOverlay({ open, activeTab, onSwitchTab, onClose 
                   variant="outline"
                   size="sm"
                   onClick={handleBack}
-                  className="h-8 px-3 rounded-xl border-[#2C2C32] text-[#AEAEB2] hover:text-white text-xs font-semibold"
+                  className="h-8 px-3 rounded-xl border-[#2C2C32] text-[#AEAEB2] hover:text-white text-xs font-semibold cursor-pointer"
                 >
                   <ChevronLeft size={14} className="rtl:rotate-180 mr-0.5" />
                   <span>{t('tutorial_back')}</span>
@@ -423,6 +421,10 @@ export default function TutorialOverlay({ open, activeTab, onSwitchTab, onClose 
                 size="sm"
                 onClick={handleNext}
                 className="h-8 px-3.5 rounded-xl text-xs font-bold cursor-pointer active:scale-95 transition-transform flex items-center gap-1"
+                style={{
+                  backgroundColor: currentTheme.primary,
+                  color: currentTheme.primaryForeground,
+                }}
               >
                 <span>{isLastStep ? t('tutorial_finish') : t('tutorial_next')}</span>
                 {isLastStep ? (
