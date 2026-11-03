@@ -11,6 +11,7 @@
   [![Vite](https://img.shields.io/badge/Vite-8.3-646cff?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
   [![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-v4-38bdf8?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
   [![Serverless](https://img.shields.io/badge/tgcloud-Serverless%20V8-ff2442?style=for-the-badge)](https://tgcloud.ai)
+  [![Cloudflare Worker](https://img.shields.io/badge/Cloudflare-Worker%20Cron%201m-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)](cloudflare-cron/README.md)
   [![GitHub Actions](https://img.shields.io/badge/Cron-GitHub%20Actions-2088ff?style=for-the-badge&logo=github-actions&logoColor=white)](.github/workflows/reminders-cron.yml)
 
   <br />
@@ -44,6 +45,7 @@ Whether you prefer tapping through a silky-smooth touch interface inside Telegra
 - **Streak Counter & Milestones**: Keep the fire burning with live streak counters and visual milestone indicators.
 - **Contribution Heatmap**: GitHub-style interactive yearly/monthly calendar heatmap to visualize your habit consistency over time.
 - **Telegram Stories Integration**: Export and share your habit streak achievement cards directly to your Telegram Story in one tap!
+- **Dynamic Custom Icons**: 20+ curated visual icons (`dumbbell`, `book`, `flame`, `droplet`, `heart`, `sparkles`, `code`, and more) rendered across your dashboard, detail screens, and schedule cards.
 
 ### 📋 Intelligent Tasks & To-Dos
 - **Due Dates & Times**: Schedule tasks with an intuitive wheel picker.
@@ -51,6 +53,7 @@ Whether you prefer tapping through a silky-smooth touch interface inside Telegra
 - **Smart Notification Warnings**: Get alerted before tasks are due (`At due time`, `15 min before`, `1 hour before`, `4 hours before`, `1 day before`, or custom offset).
 - **Overdue Tracking**: Instant warnings when tasks slip past their scheduled deadlines.
 - **Repeating Tasks**: Automatically roll over daily, weekly, or monthly recurring to-dos.
+- **Streamlined Today View**: Clean iconless Today list with progress bar indicators and enlarged tactile checkboxes for maximum focus.
 
 ### 🔔 Smart Reminders & Natural Language Input
 - **Natural Language Parsing**: Type reminders naturally in chat (e.g., `/remind tomorrow at 9:00 Team standup` or `/remind in 45 mins Call doctor`).
@@ -60,8 +63,9 @@ Whether you prefer tapping through a silky-smooth touch interface inside Telegra
 
 ### 📱 Silky-Smooth Telegram Mini App (TMA)
 - **Fluid Modern Design**: Clean mobile-first interface optimized for Telegram iOS, Android, and Desktop.
+- **Auto-Scrolling Typography (`AutoScrollText`)**: Fluid marquee animation for lengthy habit or task titles, ensuring full readability without truncation.
 - **8 Dynamic Accent Themes**: Switch instantly between `Crimson Red`, `Cyber Violet`, `Ocean Blue`, `Jungle Green`, `Sunset Orange`, `Pink Pastel`, `Electric Mint`, and `Rose Red`.
-- **Haptic & Audio Feedback**: Tactile vibrations via Telegram WebApp Haptic API paired with smooth synthesized sound effects.
+- **Haptic & Audio Feedback**: Tactile vibrations via Telegram WebApp Haptic API paired with synthesized sound effects for checks, unchecks, and tab switches.
 - **Long-Press Actions**: Quick action drawers for editing, resetting, or deleting items.
 - **Interactive Onboarding**: Guided tutorial overlay for first-time users.
 
@@ -88,7 +92,8 @@ flowchart TD
     end
 
     subgraph Automation["⏰ Automation & Cron Engine"]
-        GHA["GitHub Actions (5-min Cron Schedule)"]
+        CF["Cloudflare Worker (1-Minute Cron Trigger)"]
+        GHA["GitHub Actions (5-Minute Cron Schedule)"]
         WORKER["Resilient Node.js Worker (25s interval)"]
         PIGGYBACK["Message Piggyback Evaluator"]
     end
@@ -98,6 +103,7 @@ flowchart TD
     EP <-->|"sdk/db (Query Builder)"| DB
     HANDLERS <-->|"sdk/db (Query Builder)"| DB
 
+    CF -->|"HTTPS POST /manage/run (every 1 min)"| EP
     GHA -->|"npx tgcloud run endpoints/cron"| EP
     WORKER -->|"npx tgcloud run endpoints/cron"| EP
     HANDLERS -.->|"fireDueReminders()"| PIGGYBACK
@@ -109,7 +115,8 @@ flowchart TD
 - **Frontend**: [React 19](https://react.dev/), [Vite](https://vitejs.dev/), [Tailwind CSS v4](https://tailwindcss.com/), [Lucide React](https://lucide.dev/), [Radix UI](https://www.radix-ui.com/), [Geist & Vazirmatn Fonts](https://fonts.google.com/).
 - **Backend**: Telegram Cloud ([`@tgcloud/cli`](https://tgcloud.ai)) V8 Isolate serverless runtime with zero runtime `node_modules` overhead.
 - **Database**: SQLite-compatible serverless database managed declaratively with `sdk/db`.
-- **Automation**: GitHub Actions workflow (`.github/workflows/reminders-cron.yml`) and background worker (`scripts/worker.js`).
+- **Global Edge Cron**: [Cloudflare Workers](https://workers.cloudflare.com/) native Cron Triggers running every minute on the global edge.
+- **CI/CD Automation**: GitHub Actions workflow (`.github/workflows/reminders-cron.yml`) and background worker (`scripts/worker.js`).
 
 ---
 
@@ -117,6 +124,13 @@ flowchart TD
 
 ```
 habit_bot/
+├── cloudflare-cron/              # 24/7 Cloudflare Worker 1-minute cron runner
+│   ├── src/
+│   │   ├── index.js              # Scheduled handler & health check endpoint
+│   │   └── sources.js            # Auto-bundled tgcloud sources
+│   ├── bundle-sources.js         # Auto-bundles tgcloud code for Cloudflare
+│   ├── wrangler.toml             # Cloudflare Worker & cron configuration
+│   └── README.md                 # Cloudflare setup and deployment guide
 ├── .github/
 │   └── workflows/
 │       └── reminders-cron.yml    # Scheduled 5-minute GitHub Actions reminder cron
@@ -134,6 +148,7 @@ habit_bot/
 │   │   ├── TasksScreen.jsx       # To-Do list with priority & date filtering
 │   │   ├── RemindersScreen.jsx   # Active & completed reminders
 │   │   ├── SettingsScreen.jsx    # Theme, language, and timezone settings
+│   │   ├── AutoScrollText.jsx    # Fluid marquee scrolling for long text
 │   │   └── ShareStoryModal.jsx   # Telegram Story graphics generator
 │   ├── lib/                      # Theme provider, audio synth, and i18n
 │   ├── api.js                    # Telegram WebApp SDK bridge & haptics
@@ -163,13 +178,15 @@ habit_bot/
 
 ## ⏰ Reminder Dispatch Engine
 
-Remnoten features a **triple-redundancy scheduling architecture** to ensure timely and guaranteed reminder deliveries:
+Remnoten features a **quad-redundancy scheduling architecture** to guarantee accurate, timely reminder deliveries:
 
-1. **GitHub Actions Scheduled Cron** (`.github/workflows/reminders-cron.yml`):
-   Runs automatically in the cloud every 5 minutes with zero server hosting costs.
-2. **Resilient Local/Server Worker** (`scripts/worker.js`):
+1. **Cloudflare Worker 1-Minute Cron** (`cloudflare-cron/`):
+   **Primary Cloud Scheduler**. Runs every **1 minute** on the dot (`* * * * *`) via Cloudflare's native Cron Triggers across their global edge network. 100% free with zero servers to maintain, ensuring continuous delivery even when your local machine is asleep.
+2. **GitHub Actions Scheduled Cron** (`.github/workflows/reminders-cron.yml`):
+   Secondary cloud runner executing every 5 minutes as an automated backup.
+3. **Resilient Local/Server Worker** (`scripts/worker.js`):
    Optional high-frequency runner pinging `endpoints/cron` every 25 seconds with automatic rate-limit backoff, token caching, and watchdog recovery.
-3. **Message Piggybacking**:
+4. **Message Piggybacking**:
    Whenever any user messages the bot, all pending reminders due across the system are evaluated and dispatched synchronously.
 
 ---
@@ -220,8 +237,17 @@ Compile the production-ready static assets:
 npm run build
 ```
 
-### 4. Run the Background Reminder Worker (Optional)
-Run the local background worker for sub-minute reminder dispatching:
+### 4. Deploy 24/7 Cloudflare Cron Worker
+Deploy the 1-minute cloud reminder scheduler to Cloudflare Workers (100% free tier):
+```bash
+cd cloudflare-cron
+npm install
+npx wrangler secret put TGCLOUD_TOKEN    # Paste your tgcloud token (app8837501303:...)
+npm run deploy
+```
+
+### 5. Run the Local Worker (Optional)
+Run the local background worker for sub-minute reminder dispatching during local testing:
 ```bash
 npm run worker
 ```
@@ -266,11 +292,12 @@ npx tgcloud webhook sync
 
 ## 🔐 Environment Variables & Secrets
 
-For continuous reminder execution via **GitHub Actions**, set the following secret in your GitHub repository (**Settings > Secrets and variables > Actions**):
-
-| Secret Name | Description |
-|---|---|
-| `TGCLOUD_TOKEN` | Your Telegram Cloud API access token obtained from `.tgcloud/` after running `npx tgcloud login`. |
+| Location | Secret Name | Description |
+|---|---|---|
+| **Cloudflare Workers** | `TGCLOUD_TOKEN` | Set via `npx wrangler secret put TGCLOUD_TOKEN` in `cloudflare-cron/`. |
+| **GitHub Actions** | `TGCLOUD_TOKEN` | Repository Secret used by `.github/workflows/reminders-cron.yml`. |
+| **Local Worker** | `TGCLOUD_TOKEN` *(optional)* | Read automatically from `.tgcloud/` credentials or environment. |
+| **Local Worker** | `REMINDER_INTERVAL_MS` | Override interval in ms (default: `25000` / 25 seconds). |
 
 ---
 
