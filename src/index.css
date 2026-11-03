@@ -1,0 +1,515 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/geist";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --bg-color: #000000;
+  --card-bg: #121214;
+  --card-subtle: #19191d;
+  --card-border: #1c1c20;
+  --input-bg: #131316;
+  --accent-red: #ff2442;
+  --accent-red-hover: #e01b37;
+  --text-primary: #ffffff;
+  --text-secondary: #8e8e93;
+  --text-muted: #545458;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --background: #000000;
+  --foreground: #ffffff;
+  --card: #121214;
+  --card-foreground: #ffffff;
+  --popover: #121214;
+  --popover-foreground: #ffffff;
+  --primary: #FF2442;
+  --primary-hover: #E01B37;
+  --primary-foreground: #ffffff;
+  --primary-subtle: rgba(255, 36, 66, 0.15);
+  --primary-subtle-border: rgba(255, 36, 66, 0.3);
+  --secondary: #19191D;
+  --secondary-foreground: #ffffff;
+  --muted: #1A1A1E;
+  --muted-foreground: #8E8E93;
+  --accent: #1C1C22;
+  --accent-foreground: #ffffff;
+  --destructive: #FF2442;
+  --border: #1C1C20;
+  --input: #131316;
+  --ring: #FF2442;
+  --radius: 1rem;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+body {
+  background-color: #000000;
+  color: #ffffff;
+  font-family: 'Plus Jakarta Sans', 'Vazirmatn', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', system-ui, sans-serif;
+  overflow-x: hidden;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  justify-content: center;
+  letter-spacing: -0.2px;
+}
+
+/* Persian Vazirmatn Font Configuration (Layout remains LTR) */
+html {
+  direction: ltr !important;
+}
+
+html[lang="fa"],
+body.lang-fa,
+.font-vazirmatn,
+html[lang="fa"] input,
+html[lang="fa"] button,
+html[lang="fa"] select,
+html[lang="fa"] textarea,
+body.lang-fa input,
+body.lang-fa button,
+body.lang-fa select,
+body.lang-fa textarea {
+  font-family: 'Vazirmatn', -apple-system, BlinkMacSystemFont, system-ui, sans-serif !important;
+  letter-spacing: 0 !important;
+}
+
+/* BiDi (Bidirectional) & Mixed Persian + English Typography Support */
+input,
+textarea,
+[dir="auto"],
+.bidi-auto {
+  unicode-bidi: plaintext;
+  text-align: start;
+}
+
+#root {
+  width: 100%;
+  max-width: 440px;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  background-color: #000000;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  display: none;
+}
+
+/* Guaranteed spacing between list items across every webview/browser */
+.items-list {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0 !important;
+}
+
+.items-list > * + *,
+.items-list > *:not(:first-child) {
+  margin-top: 12px !important;
+}
+
+.space-y-3 > * + *,
+.space-y-3 > *:not(:first-child) {
+  margin-top: 12px !important;
+}
+
+.space-y-4 > * + *,
+.space-y-4 > *:not(:first-child) {
+  margin-top: 16px !important;
+}
+
+/* Red Button Styling */
+.btn-red {
+  background-color: var(--primary, #ff2442);
+  color: var(--primary-foreground, #ffffff);
+  font-weight: 700;
+  border-radius: 16px;
+  height: 52px;
+  padding: 0 20px;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 15px;
+  letter-spacing: -0.2px;
+  transition: transform 0.1s ease, background-color 0.15s ease;
+  width: 100%;
+}
+.btn-red:active {
+  transform: scale(0.98);
+}
+
+/* Secondary Button (Edit Habit) */
+.btn-secondary {
+  background-color: transparent;
+  color: #ffffff;
+  font-weight: 600;
+  border-radius: 16px;
+  height: 50px;
+  padding: 0 20px;
+  border: 1px solid #242428;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 15px;
+  transition: transform 0.1s ease;
+  width: 100%;
+}
+.btn-secondary:active {
+  background-color: #161619;
+  transform: scale(0.98);
+}
+
+/* Header Square Red Plus Button */
+.btn-header-plus {
+  width: 38px;
+  min-width: 38px;
+  height: 38px;
+  min-height: 38px;
+  border-radius: 11px;
+  background-color: var(--primary, #ff2442);
+  color: var(--primary-foreground, #ffffff);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.15s ease, background-color 0.15s ease;
+  flex-shrink: 0;
+}
+.btn-header-plus:active {
+  transform: scale(0.92);
+}
+
+/* Card Styling */
+.card-dark {
+  background-color: #121214;
+  border-radius: 18px;
+  border: 1px solid #1a1a1e;
+}
+
+/* iOS Toggle Switch - 100% resilient across LTR/RTL */
+.toggle-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 50px;
+  min-width: 50px;
+  max-width: 50px;
+  height: 30px;
+  min-height: 30px;
+  max-height: 30px;
+  flex-shrink: 0;
+  direction: ltr !important;
+  cursor: pointer;
+}
+.toggle-switch input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  margin: 0;
+  padding: 0;
+  pointer-events: none;
+}
+.toggle-slider {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #36363b;
+  transition: background-color 0.2s ease;
+  border-radius: 30px;
+}
+.toggle-thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 24px;
+  height: 24px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+  transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+input:checked + .toggle-slider {
+  background-color: var(--primary, #ff2442);
+}
+input:checked ~ .toggle-thumb {
+  transform: translateX(20px);
+}
+
+/* High-contrast dark circle thumb for Black & White theme & light contrast themes */
+[data-slot="switch-thumb"] {
+  background-color: #ffffff;
+}
+
+[data-slot="switch"][data-checked] [data-slot="switch-thumb"],
+[data-slot="switch-thumb"][data-checked],
+span[data-slot="switch-thumb"][data-checked] {
+  background-color: var(--switch-thumb-checked, #ffffff) !important;
+}
+
+[data-theme="white_and_black"] [data-slot="switch"][data-checked] [data-slot="switch-thumb"],
+[data-theme="white_and_black"] [data-slot="switch"] [data-slot="switch-thumb"][data-checked],
+[data-theme="white_and_black"] [data-slot="switch"][data-state="checked"] [data-slot="switch-thumb"],
+[data-theme="white_and_black"] span[data-slot="switch-thumb"][data-checked],
+[data-theme="white_and_black"] input:checked ~ .toggle-thumb {
+  background-color: #121214 !important;
+}
+
+/* Apple Spring Animations */
+@keyframes appleCheckBounce {
+  0% {
+    transform: scale(0.85);
+  }
+  45% {
+    transform: scale(1.18);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes appleCheckIconIn {
+  0% {
+    transform: scale(0) rotate(-14deg);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.15) rotate(2deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+/* Apple Spring Checkbox Button */
+.check-btn {
+  position: relative;
+  width: 28px !important;
+  min-width: 28px !important;
+  max-width: 28px !important;
+  height: 28px !important;
+  min-height: 28px !important;
+  max-height: 28px !important;
+  border-radius: 50% !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  flex-shrink: 0;
+  cursor: pointer;
+  padding: 0;
+  touch-action: manipulation;
+}
+.check-btn::after {
+  content: '';
+  position: absolute;
+  top: -8px;
+  bottom: -8px;
+  left: -8px;
+  right: -8px;
+}
+.check-btn:active {
+  transform: scale(0.86);
+  transition-duration: 0.1s;
+}
+.check-btn.checked {
+  background-color: var(--primary, #ff2442);
+  border-color: var(--primary, #ff2442);
+  box-shadow: 0 0 16px var(--primary-subtle, rgba(255, 36, 66, 0.35)), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  animation: appleCheckBounce 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+.check-btn.checked svg {
+  animation: appleCheckIconIn 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Filter Pills - Apple Segmented Control Style */
+.filter-pill {
+  padding: 8px 18px;
+  border-radius: 9999px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.05);
+  color: #8e8e93;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  white-space: nowrap;
+}
+.filter-pill:active {
+  transform: scale(0.95);
+}
+.filter-pill.active {
+  background: var(--primary, #ff2442);
+  color: var(--primary-foreground, #ffffff);
+  border-color: transparent;
+  box-shadow: 0 4px 14px var(--primary-subtle, rgba(255, 36, 66, 0.3)), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+/* Apple Frosted Glass Floating Dock */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 440px;
+  background: rgba(12, 12, 16, 0.62);
+  backdrop-filter: blur(28px) saturate(200%);
+  -webkit-backdrop-filter: blur(28px) saturate(200%);
+  display: flex;
+  justify-content: space-around;
+  padding: 8px 10px calc(12px + var(--safe-bottom)) 10px;
+  z-index: 50;
+  border-top: 0.5px solid rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 0 -8px 32px rgba(0, 0, 0, 0.5);
+}
+.nav-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3.5px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #8e8e93;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  flex: 1;
+  padding: 6px 0;
+  letter-spacing: -0.15px;
+  position: relative;
+  border-radius: 14px;
+}
+.nav-tab.active {
+  color: var(--primary, #ff2442);
+}
+.nav-tab:active {
+  transform: scale(0.88);
+}
+
+@theme inline {
+  --font-heading: var(--font-sans);
+  --font-sans: 'Geist Variable', sans-serif;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+.dark {
+  --background: #000000;
+  --foreground: #ffffff;
+  --card: #121214;
+  --card-foreground: #ffffff;
+  --popover: #121214;
+  --popover-foreground: #ffffff;
+  --primary: #FF2442;
+  --primary-hover: #E01B37;
+  --primary-foreground: #ffffff;
+  --primary-subtle: rgba(255, 36, 66, 0.15);
+  --primary-subtle-border: rgba(255, 36, 66, 0.3);
+  --secondary: #19191D;
+  --secondary-foreground: #ffffff;
+  --muted: #1A1A1E;
+  --muted-foreground: #8E8E93;
+  --accent: #1C1C22;
+  --accent-foreground: #ffffff;
+  --destructive: #FF2442;
+  --border: #1C1C20;
+  --input: #131316;
+  --ring: #FF2442;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
+
+/* Subtle fading animation for selected heatmap cell */
+@keyframes heatmap-subtle-fade {
+  0% {
+    opacity: 0.3;
+    filter: brightness(1.6);
+  }
+  50% {
+    opacity: 1;
+    filter: brightness(1.25);
+  }
+  100% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+}
+
+.heatmap-cell-selected {
+  animation: heatmap-subtle-fade 0.7s ease-out 1;
+}
