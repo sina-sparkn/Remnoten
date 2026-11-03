@@ -4,10 +4,10 @@ import {
   Flame,
   Send,
   ChevronRight,
-  Calendar,
   Plus,
 } from 'lucide-react';
-import { HabitsNavIcon } from './Icons.jsx';
+import HabitIcon, { HabitsNavIcon } from './Icons.jsx';
+import AutoScrollText from './AutoScrollText.jsx';
 import {
   hapticLight,
   hapticMedium,
@@ -47,10 +47,11 @@ function formatHeroDate(lang) {
 }
 
 /**
- * HomeScreen — Pixel-perfect recreation of the requested UI design:
+ * HomeScreen — Pixel-perfect layout matching the UI design:
+ * - Dynamic theme selector integration across the entire page (glow, badges, active states, bars)
  * - Clean "Remnoten" header with circular Send button
- * - Hero streak card with purple ambient glow, dynamic date, pink flame, dual stats (Habits / Tasks)
- * - "Today" section with unified tasks & habits, custom checkboxes, and pink activity bars icon
+ * - Hero streak card with theme-tinted ambient glow, dynamic date, flame badge, dual stats (Habits / Tasks)
+ * - "Today" section with unified tasks & habits, custom checkboxes, and activity bars icon
  * - "Upcoming" section with squircle calendar icon badge, title & schedule info
  */
 export default function HomeScreen({
@@ -121,13 +122,14 @@ export default function HomeScreen({
   // Build upcoming items list
   const upcomingItems = [];
   if (activeReminders.length > 0) {
-    activeReminders.slice(0, 2).forEach((r) => {
+    activeReminders.slice(0, 3).forEach((r) => {
       const repeatLabel = r.repeat ? (r.repeatRate === 'weekly' ? 'Weekly' : 'Daily') : 'Once';
       upcomingItems.push({
         id: `reminder-${r.id}`,
         title: r.text,
         subtitle: `Tomorrow · ${repeatLabel}`,
         type: 'reminder',
+        icon: r.icon || 'bell',
         raw: r,
         onClick: () => {
           if (onEditReminder) onEditReminder(r);
@@ -138,12 +140,13 @@ export default function HomeScreen({
   }
 
   if (upcomingTasks.length > 0) {
-    upcomingTasks.slice(0, 2).forEach((task) => {
+    upcomingTasks.slice(0, 3).forEach((task) => {
       upcomingItems.push({
         id: `task-${task.id}`,
         title: task.text,
         subtitle: `Tomorrow · ${task.dueTime || 'Task'}`,
         type: 'task',
+        icon: task.icon || 'todo',
         raw: task,
         onClick: () => {
           if (onEditTodo) onEditTodo(task);
@@ -154,7 +157,7 @@ export default function HomeScreen({
   }
 
   return (
-    <div className="flex-1 px-4 pt-3 pb-32 max-w-[440px] mx-auto w-full">
+    <div className="flex-1 px-4 pt-3 pb-36 max-w-[440px] mx-auto w-full">
       {/* ─── Top Header: "Remnoten" + Send button ─────────────────────── */}
       <div className="flex items-center justify-between mb-4 px-1">
         <h1 className="text-[28px] font-bold tracking-tight text-white leading-none">
@@ -171,16 +174,15 @@ export default function HomeScreen({
         </button>
       </div>
 
-      {/* ─── Hero Streak Card ────────────────────────────────────────── */}
+      {/* ─── Hero Streak Card with Dynamic Theme Glow ────────────────── */}
       <div
         id="tour-streak-section"
         className="rounded-[28px] p-6 relative overflow-hidden border border-white/[0.05] shadow-xl select-none"
         style={{
-          background:
-            'radial-gradient(circle at 85% 25%, rgba(147, 51, 234, 0.22) 0%, rgba(126, 34, 206, 0.08) 45%, transparent 75%), #141419',
+          background: `radial-gradient(circle at 85% 25%, ${currentTheme.primary}33 0%, ${currentTheme.primary}0D 45%, transparent 75%), #141419`,
         }}
       >
-        {/* Top Row: Date + Pink Flame Badge */}
+        {/* Top Row: Date + Theme-accented Flame Badge */}
         <div className="flex items-center justify-between mb-1">
           <span className="text-[#8e8e93] text-[15px] font-medium tracking-tight">
             {formattedDate}
@@ -188,9 +190,14 @@ export default function HomeScreen({
 
           <div
             onClick={handleShare}
-            className="w-10 h-10 rounded-full bg-[#27172c] border border-[#ec4899]/20 flex items-center justify-center shrink-0 cursor-pointer active:scale-95 transition-transform shadow-[0_0_15px_rgba(236,72,153,0.15)]"
+            className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 cursor-pointer active:scale-95 transition-transform"
+            style={{
+              backgroundColor: currentTheme.primarySubtle,
+              border: `1px solid ${currentTheme.primarySubtleBorder}`,
+              boxShadow: `0 0 15px ${currentTheme.primary}25`,
+            }}
           >
-            <Flame size={20} className="text-[#ec4899] fill-[#ec4899]" />
+            <Flame size={20} color={currentTheme.primary} className="fill-current" />
           </div>
         </div>
 
@@ -201,7 +208,7 @@ export default function HomeScreen({
 
         {/* Dual Progress Stats (Habits & Tasks) */}
         <div className="flex items-center">
-          {/* Habits Column */}
+          {/* Habits Column (Themed Progress Bar) */}
           <div className="flex-1 min-w-0 pr-3">
             <div className="text-[13px] text-[#8e8e93] font-normal mb-1">
               {t('nav_habits')}
@@ -211,10 +218,11 @@ export default function HomeScreen({
             </div>
             <div className="h-[5px] w-full bg-white/[0.08] rounded-full overflow-hidden">
               <div
-                className="h-full rounded-full transition-all duration-500 bg-[#ec4899]"
+                className="h-full rounded-full transition-all duration-500"
                 style={{
                   width: totalHabits > 0 ? `${Math.min(100, Math.max(0, habitProgress * 100))}%` : '0%',
-                  boxShadow: habitProgress > 0 ? '0 0 8px rgba(236, 72, 153, 0.5)' : 'none',
+                  backgroundColor: currentTheme.primary,
+                  boxShadow: habitProgress > 0 ? `0 0 8px ${currentTheme.primary}80` : 'none',
                 }}
               />
             </div>
@@ -223,7 +231,7 @@ export default function HomeScreen({
           {/* Thin Vertical Divider */}
           <div className="w-[1px] bg-white/[0.08] self-stretch mx-3 my-0.5" />
 
-          {/* Tasks Column */}
+          {/* Tasks Column (Vibrant Green Progress Bar) */}
           <div className="flex-1 min-w-0 pl-3">
             <div className="text-[13px] text-[#8e8e93] font-normal mb-1">
               {t('nav_tasks')}
@@ -279,7 +287,7 @@ export default function HomeScreen({
                       hapticMedium();
                       onOpenAddTask();
                     }}
-                    className="px-4 py-2 rounded-full bg-white/10 text-white text-xs font-semibold hover:bg-white/15 transition-all flex items-center gap-1.5"
+                    className="px-4 py-2 rounded-full bg-white/10 text-white text-xs font-semibold hover:bg-white/15 transition-all flex items-center gap-1.5 cursor-pointer"
                   >
                     <Plus size={14} />
                     <span>{t('quick_add_task')}</span>
@@ -292,7 +300,11 @@ export default function HomeScreen({
                       hapticMedium();
                       onOpenAddHabit();
                     }}
-                    className="px-4 py-2 rounded-full bg-[#ec4899] text-white text-xs font-semibold hover:bg-[#db2777] transition-all flex items-center gap-1.5"
+                    className="px-4 py-2 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer"
+                    style={{
+                      backgroundColor: currentTheme.primary,
+                      color: currentTheme.primaryForeground,
+                    }}
                   >
                     <Plus size={14} />
                     <span>{t('add_habit_btn')}</span>
@@ -311,6 +323,7 @@ export default function HomeScreen({
                   onToggleTodo={onToggleTodo}
                   onEditTodo={onEditTodo}
                   onItemLongPress={onItemLongPress}
+                  currentTheme={currentTheme}
                 />
               ))}
 
@@ -328,6 +341,7 @@ export default function HomeScreen({
                     onToggleHabit={onToggleHabit}
                     onOpenHabitDetail={onOpenHabitDetail}
                     onItemLongPress={onItemLongPress}
+                    currentTheme={currentTheme}
                   />
                 </React.Fragment>
               ))}
@@ -368,12 +382,24 @@ export default function HomeScreen({
                   className="flex items-center justify-between p-4 cursor-pointer hover:bg-white/[0.02] active:bg-white/[0.04] transition-colors select-none"
                 >
                   <div className="flex items-center gap-3.5 min-w-0 flex-1 pr-2">
-                    <div className="w-10 h-10 rounded-2xl bg-[#23182e] border border-[#a855f7]/20 flex items-center justify-center shrink-0">
-                      <Calendar size={18} className="text-[#c084fc]" />
+                    <div
+                      className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
+                      style={{
+                        backgroundColor: currentTheme.primarySubtle,
+                        border: `1px solid ${currentTheme.primarySubtleBorder}`,
+                      }}
+                    >
+                      <HabitIcon
+                        name={item.icon || (item.type === 'reminder' ? 'bell' : 'todo')}
+                        size={18}
+                        color={currentTheme.primary}
+                      />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="text-[16px] font-medium text-white leading-snug truncate">
-                        {item.title}
+                      <div className="text-[16px] font-medium text-white leading-snug">
+                        <AutoScrollText dir="auto">
+                          {item.title}
+                        </AutoScrollText>
                       </div>
                       <div className="text-[13px] text-[#8e8e93] mt-0.5">
                         {item.subtitle}
@@ -394,8 +420,14 @@ export default function HomeScreen({
               className="flex items-center justify-between p-4 cursor-pointer hover:bg-white/[0.02] active:bg-white/[0.04] transition-colors select-none"
             >
               <div className="flex items-center gap-3.5 min-w-0 flex-1 pr-2">
-                <div className="w-10 h-10 rounded-2xl bg-[#23182e] border border-[#a855f7]/20 flex items-center justify-center shrink-0">
-                  <Calendar size={18} className="text-[#c084fc]" />
+                <div
+                  className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
+                  style={{
+                    backgroundColor: currentTheme.primarySubtle,
+                    border: `1px solid ${currentTheme.primarySubtleBorder}`,
+                  }}
+                >
+                  <HabitIcon name="dumbbell" size={18} color={currentTheme.primary} />
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="text-[16px] font-medium text-white leading-snug truncate">
@@ -418,7 +450,7 @@ export default function HomeScreen({
 /**
  * TodayTaskRow — Row item for a task in the "Today" list
  */
-function TodayTaskRow({ todo, isFirst, onToggleTodo, onEditTodo, onItemLongPress }) {
+function TodayTaskRow({ todo, isFirst, onToggleTodo, onEditTodo, onItemLongPress, currentTheme }) {
   const longPressProps = useLongPress(
     () => {
       if (onItemLongPress) onItemLongPress({ type: 'task', item: todo });
@@ -434,7 +466,7 @@ function TodayTaskRow({ todo, isFirst, onToggleTodo, onEditTodo, onItemLongPress
       className="flex items-center justify-between p-4 cursor-pointer hover:bg-white/[0.02] active:bg-white/[0.04] transition-colors select-none group"
     >
       <div className="flex items-center gap-3.5 min-w-0 flex-1 pr-2">
-        {/* Circular Checkbox */}
+        {/* Circular Checkbox (Dynamically themed) */}
         <button
           type="button"
           onClick={(e) => {
@@ -449,13 +481,35 @@ function TodayTaskRow({ todo, isFirst, onToggleTodo, onEditTodo, onItemLongPress
             if (onToggleTodo) onToggleTodo(todo.id);
           }}
           className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-all cursor-pointer ${
-            todo.done
-              ? 'bg-[#ec4899] text-white shadow-[0_0_10px_rgba(236,72,153,0.4)]'
-              : 'border-2 border-[#545458] hover:border-zinc-400'
+            todo.done ? '' : 'border-2 border-[#545458] hover:border-zinc-400'
           }`}
+          style={
+            todo.done
+              ? {
+                  backgroundColor: currentTheme.primary,
+                  color: currentTheme.primaryForeground,
+                  boxShadow: `0 0 10px ${currentTheme.primary}66`,
+                }
+              : undefined
+          }
         >
-          {todo.done && <Check size={14} strokeWidth={3} className="text-white" />}
+          {todo.done && <Check size={14} strokeWidth={3} color={currentTheme.primaryForeground} />}
         </button>
+
+        {/* Task Icon Squircle */}
+        <div
+          className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 transition-colors"
+          style={{
+            backgroundColor: todo.done ? 'rgba(48, 209, 88, 0.15)' : '#1C1C22',
+            border: todo.done ? '1px solid rgba(48, 209, 88, 0.25)' : '1px solid rgba(255,255,255,0.06)',
+          }}
+        >
+          <HabitIcon
+            name={todo.icon || 'todo'}
+            size={18}
+            color={todo.done ? '#30D158' : '#ffffff'}
+          />
+        </div>
 
         {/* Text Details */}
         <div className="min-w-0 flex-1">
@@ -480,7 +534,7 @@ function TodayTaskRow({ todo, isFirst, onToggleTodo, onEditTodo, onItemLongPress
 /**
  * TodayHabitRow — Row item for a habit in the "Today" list
  */
-function TodayHabitRow({ habit, onToggleHabit, onOpenHabitDetail, onItemLongPress }) {
+function TodayHabitRow({ habit, onToggleHabit, onOpenHabitDetail, onItemLongPress, currentTheme }) {
   const isDone = habit.isDoneToday;
 
   const longPressProps = useLongPress(
@@ -498,7 +552,7 @@ function TodayHabitRow({ habit, onToggleHabit, onOpenHabitDetail, onItemLongPres
       className="flex items-center justify-between p-4 cursor-pointer hover:bg-white/[0.02] active:bg-white/[0.04] transition-colors select-none group"
     >
       <div className="flex items-center gap-3.5 min-w-0 flex-1 pr-2">
-        {/* Circular Checkbox (Solid pink with checkmark when done) */}
+        {/* Circular Checkbox (Dynamically themed when done) */}
         <button
           type="button"
           onClick={(e) => {
@@ -513,13 +567,35 @@ function TodayHabitRow({ habit, onToggleHabit, onOpenHabitDetail, onItemLongPres
             if (onToggleHabit) onToggleHabit(habit.id);
           }}
           className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-all cursor-pointer ${
-            isDone
-              ? 'bg-[#ec4899] text-white shadow-[0_0_10px_rgba(236,72,153,0.4)]'
-              : 'border-2 border-[#545458] hover:border-zinc-400'
+            isDone ? '' : 'border-2 border-[#545458] hover:border-zinc-400'
           }`}
+          style={
+            isDone
+              ? {
+                  backgroundColor: currentTheme.primary,
+                  color: currentTheme.primaryForeground,
+                  boxShadow: `0 0 10px ${currentTheme.primary}66`,
+                }
+              : undefined
+          }
         >
-          {isDone && <Check size={14} strokeWidth={3} className="text-white" />}
+          {isDone && <Check size={14} strokeWidth={3} color={currentTheme.primaryForeground} />}
         </button>
+
+        {/* Habit Icon Squircle */}
+        <div
+          className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 transition-colors"
+          style={{
+            backgroundColor: isDone ? currentTheme.primarySubtle : '#1C1C22',
+            border: isDone ? `1px solid ${currentTheme.primarySubtleBorder}` : '1px solid rgba(255,255,255,0.06)',
+          }}
+        >
+          <HabitIcon
+            name={habit.icon || habit.name}
+            size={18}
+            color={isDone ? currentTheme.primary : '#ffffff'}
+          />
+        </div>
 
         {/* Text Details */}
         <div className="min-w-0 flex-1">
@@ -536,9 +612,9 @@ function TodayHabitRow({ habit, onToggleHabit, onOpenHabitDetail, onItemLongPres
         </div>
       </div>
 
-      {/* Right: 3-bar streak icon in pink matching the design */}
+      {/* Right: 3-bar streak icon matching the theme */}
       <div className="shrink-0 flex items-center pl-2">
-        <HabitsNavIcon size={18} color="#ec4899" />
+        <HabitsNavIcon size={18} color={currentTheme.primary} />
       </div>
     </div>
   );
