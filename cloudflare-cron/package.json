@@ -1,0 +1,13 @@
+{
+  "name": "remnoten-cron-worker",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "bundle": "node bundle-sources.js",
+    "predeploy": "node bundle-sources.js",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^3.109.0"
+  }
+}

@@ -1,0 +1,7 @@
+name = "remnoten-cron"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+
+# Runs automatically every 1 minute with 0ms latency in Cloudflare's cloud
+[triggers]
+crons = ["* * * * *"]
